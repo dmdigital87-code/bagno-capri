@@ -1747,6 +1747,12 @@ function saveChangePin() {
 }
 
 // ============ DATA ============
+// Reset menu if version mismatch (must be before loading)
+const _MENU_VERSION_CHECK = '5';
+if (localStorage.getItem('mmt_menu_version') !== _MENU_VERSION_CHECK) {
+  localStorage.removeItem('mmt_menu');
+  localStorage.setItem('mmt_menu_version', _MENU_VERSION_CHECK);
+}
 let menu = JSON.parse(localStorage.getItem('mmt_menu') || 'null') || [
   // PANINI
   { id:1,  name:'Classico*',           price:8,  cat:'Panini',         emoji:'🍔', active:true , ingredients:["Pane Bianco","Carne","Insalata","Pomodoro","Ketchup","Maionese"] },
@@ -2898,6 +2904,9 @@ function liberaTavolo(sessionId) {
   if(!sessionOrders.length) return;
   const label = getSpotLabel(sessionOrders[0].table);
   if(!confirm(`Confermi il pagamento e liberi ${label}?`)) return;
+  // Invia dati a Google Sheets
+  const copertiSess = sessionOrders[0].coperti || 0;
+  sendToSheets(label, sessionOrders, copertiSess);
   // Segna tutti gli ordini della sessione come completati
   orders.forEach(o => {
     if((o.sessionId||o.id) == sessionId && o.status === 'pending') {
@@ -2947,13 +2956,7 @@ setInterval(()=>{
 }, 10000);
 
 // ============ INIT ============
-// Menu version: if outdated, reset to default
-const MENU_VERSION = '5';
 const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzl1N8Ci61r5ohNqrKAObAmdyehkxZQKZpd7z7ll_o9ifxXPq38bhBGYh0G3-XcbExS/exec';
-if (localStorage.getItem('mmt_menu_version') !== MENU_VERSION) {
-  localStorage.removeItem('mmt_menu');
-  localStorage.setItem('mmt_menu_version', MENU_VERSION);
-}
 
 // Check session
 if (!sessionStorage.getItem('mmt_unlocked')) {

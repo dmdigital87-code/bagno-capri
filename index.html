@@ -1748,7 +1748,7 @@ function saveChangePin() {
 
 // ============ DATA ============
 // Reset menu if version mismatch (must be before loading)
-const _MENU_VERSION_CHECK = '5';
+const _MENU_VERSION_CHECK = '6';
 if (localStorage.getItem('mmt_menu_version') !== _MENU_VERSION_CHECK) {
   localStorage.removeItem('mmt_menu');
   localStorage.setItem('mmt_menu_version', _MENU_VERSION_CHECK);
@@ -2194,12 +2194,18 @@ function sendToSheets(tableLabel, tableOrders, copertiNum) {
     (order.items||[]).forEach(function(item){
       var _t=typeof order.time==='number'?order.time:new Date(order.time).getTime();
       var oraOrdine=isNaN(_t)?timeStr:new Date(_t).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      rows.push({data:dateStr,ora_chiusura:timeStr,giorno_settimana:giorni[now.getDay()],tavolo:tableLabel,coperti:copertiNum,session_id:sessionId,ordine_num:order.orderNum||1,ora_ordine:oraOrdine,categoria:item.category||'',prodotto:item.name||'',emoji:item.emoji||'',quantita:item.qty||1,prezzo_unitario:(item.price||0).toFixed(2),subtotale:((item.price||0)*(item.qty||1)).toFixed(2),note:order.note||'',totale_tavolo:totalAmount.toFixed(2)});
+      rows.push({data:dateStr,ora_chiusura:timeStr,giorno_settimana:giorni[now.getDay()],tavolo:tableLabel,coperti:copertiNum,session_id:sessionId,ordine_num:order.orderNum||1,ora_ordine:oraOrdine,categoria:item.cat||item.category||'',prodotto:item.name||'',emoji:item.emoji||'',quantita:item.qty||1,prezzo_unitario:(item.price||0).toFixed(2),subtotale:((item.price||0)*(item.qty||1)).toFixed(2),note:order.note||'',totale_tavolo:totalAmount.toFixed(2)});
     });
   });
-  try{
-    fetch(SHEET_WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:rows,meta:{tableLabel:tableLabel,totalAmount:totalAmount.toFixed(2),coperti:copertiNum,dateStr:dateStr,timeStr:timeStr,sessionId:sessionId}})});
-  }catch(e){console.warn('Errore Sheets:',e);}
+  var payload = JSON.stringify({rows:rows,meta:{tableLabel:tableLabel,totalAmount:totalAmount.toFixed(2),coperti:copertiNum,dateStr:dateStr,timeStr:timeStr,sessionId:sessionId}});
+  console.log('Sheets invio:', rows.length, 'righe per', tableLabel, rows);
+  fetch(SHEET_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: payload
+  }).then(function(){ console.log('Sheets: richiesta inviata'); })
+    .catch(function(e){ console.warn('Sheets errore:', e); });
 }
 
 function pagaFromCart() {
@@ -2956,7 +2962,7 @@ setInterval(()=>{
 }, 10000);
 
 // ============ INIT ============
-const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzl1N8Ci61r5ohNqrKAObAmdyehkxZQKZpd7z7ll_o9ifxXPq38bhBGYh0G3-XcbExS/exec';
+const SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwtAKvETUGXkMsWlwZtr_bOpfDDp45jax0w-ROsdX83Bdv0sQC1Q3ANYmIYuq61VEI/exec';
 
 // Check session
 if (!sessionStorage.getItem('mmt_unlocked')) {

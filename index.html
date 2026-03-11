@@ -1592,7 +1592,26 @@
   <div class="menu-manager-grid" id="menu-manager-grid"></div>
 </div>
 
-<!-- Storico e Analitiche rimossi — dati su Google Sheets -->
+<!-- Popup ingredienti ordine -->
+<div id="order-ing-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:300; align-items:flex-end; justify-content:center;">
+  <div class="order-ing-sheet">
+    <div class="order-ing-header">
+      <span class="order-ing-emoji" id="ois-emoji"></span>
+      <div>
+        <div class="order-ing-title" id="ois-title"></div>
+        <div class="order-ing-subtitle">Tocca per rimuovere ingredienti</div>
+      </div>
+      <button class="order-ing-close" onclick="document.getElementById('order-ing-overlay').style.display='none'">✕</button>
+    </div>
+    <div class="order-ing-tags" id="ois-tags"></div>
+    <div id="ois-extras-suggestions" style="display:none; margin-bottom:12px;"></div>
+    <div class="order-ing-add-row">
+      <input class="order-ing-input" id="ois-extra-input" type="text" placeholder="Aggiungi extra (es. senza cipolla)..." onkeydown="if(event.key==='Enter')addExtraIng()">
+      <button class="btn-primary" style="padding:9px 16px;border-radius:10px;font-size:0.9rem;" onclick="addExtraIng()">＋</button>
+    </div>
+    <button class="btn-primary" style="width:100%;padding:14px;font-size:1rem;border-radius:14px;" onclick="confirmIngSheet()">✓ Aggiungi all'ordine</button>
+  </div>
+</div>
 
 <script>
 // ============ PIN SYSTEM ============

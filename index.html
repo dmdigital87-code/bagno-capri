@@ -107,6 +107,158 @@
     50% { transform: scale(1.1); }
   }
 
+  /* ===== AI ASSISTANT ===== */
+  #ai-fab {
+    position: fixed; bottom: 24px; right: 20px; z-index: 500;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sea-deep), var(--sea-light));
+    color: white; border: none; font-size: 1.6rem;
+    box-shadow: 0 6px 24px rgba(26,107,124,0.45);
+    cursor: pointer; transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #ai-fab:hover { transform: scale(1.1); box-shadow: 0 10px 32px rgba(26,107,124,0.55); }
+  #ai-fab.open { background: linear-gradient(135deg, var(--coral), var(--coral-light)); }
+
+  #ai-panel {
+    position: fixed; bottom: 92px; right: 20px; z-index: 499;
+    width: 340px; max-width: calc(100vw - 24px);
+    background: var(--white); border-radius: 20px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+    display: flex; flex-direction: column;
+    max-height: 520px; overflow: hidden;
+    transform: scale(0.85) translateY(30px);
+    transform-origin: bottom right;
+    opacity: 0; pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #ai-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+
+  #ai-header {
+    background: linear-gradient(135deg, var(--sea-deep), var(--sea-light));
+    color: white; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 20px 20px 0 0; flex-shrink: 0;
+  }
+  #ai-header-close {
+    background: rgba(255,255,255,0.15); border: none; color: white;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 1rem; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  #ai-header-close:hover { background: rgba(255,255,255,0.3); }
+
+  #ai-messages {
+    flex: 1; overflow-y: auto; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+  #ai-messages::-webkit-scrollbar { width: 4px; }
+  #ai-messages::-webkit-scrollbar-thumb { background: var(--sand-dark); border-radius: 2px; }
+
+  .ai-msg { display: flex; gap: 6px; align-items: flex-end; }
+  .ai-msg.user { flex-direction: row-reverse; }
+  .ai-bubble {
+    padding: 10px 14px; border-radius: 16px; font-size: 0.87rem;
+    line-height: 1.45; max-width: 82%; word-break: break-word;
+  }
+  .ai-msg.bot .ai-bubble { background: var(--sand); color: var(--text); border-radius: 4px 16px 16px 16px; }
+  .ai-msg.user .ai-bubble { background: var(--sea); color: white; border-radius: 16px 4px 16px 16px; }
+  .ai-avatar { font-size: 1.1rem; flex-shrink: 0; padding-bottom: 2px; }
+
+  .ai-typing { display: flex; align-items: center; gap: 4px; padding: 10px 14px; }
+  .ai-dot { width: 7px; height: 7px; background: var(--text-muted); border-radius: 50%; animation: aiDot 1.2s infinite; }
+  .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes aiDot { 0%,80%,100% { transform:scale(0.7); opacity:0.4; } 40% { transform:scale(1); opacity:1; } }
+
+  #ai-apikey-bar {
+    padding: 8px 12px; background: #fff8e6; border-top: 1px solid #fdecc0;
+    font-size: 0.75rem; display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+  }
+  #ai-apikey-input {
+    flex: 1; padding: 5px 9px; border: 1px solid #fddaa0; border-radius: 7px;
+    font-size: 0.75rem; font-family: monospace; background: white;
+  }
+  #ai-apikey-input:focus { outline: none; border-color: var(--gold); }
+  #ai-apikey-save { padding: 5px 10px; background: var(--gold); color: white; border: none; border-radius: 7px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+  #ai-input-area {
+    padding: 10px 12px; border-top: 1px solid var(--sand-dark);
+    display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+    background: var(--white);
+  }
+  #ai-input {
+    flex: 1; padding: 9px 14px; border: 1.5px solid var(--sand-dark);
+    border-radius: 20px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    background: var(--sand); outline: none; transition: border-color 0.2s;
+  }
+  #ai-input:focus { border-color: var(--sea-light); background: white; }
+  #ai-send-btn {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--sea);
+    color: white; border: none; font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  #ai-send-btn:hover { background: var(--sea-light); transform: scale(1.08); }
+  #ai-send-btn:disabled { background: var(--sand-dark); cursor: not-allowed; transform: none; }
+
+  /* Suggestions chips */
+  .ai-suggestions { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 12px 8px; flex-shrink: 0; }
+  .ai-chip {
+    padding: 5px 11px; background: var(--sand); border: 1.5px solid var(--sand-dark);
+    border-radius: 20px; font-size: 0.75rem; color: var(--sea-deep); cursor: pointer;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif; font-weight: 500; white-space: nowrap;
+  }
+  .ai-chip:hover { background: var(--sea); color: white; border-color: var(--sea); }
+
+  /* ===== SYNC BADGE ===== */
+  .sync-status {
+    display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+    border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .sync-status:hover { background: rgba(255,255,255,0.15); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #6b7e84; transition: background 0.3s; }
+  .sync-dot.ok { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+  .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+  .sync-dot.error { background: #ef4444; }
+  .sync-dot.offline { background: #6b7e84; }
+
+  /* ===== SYNC MODAL ===== */
+  #sync-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 600;
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  #sync-modal.open { display: flex; }
+  .sync-modal-inner {
+    background: var(--white); border-radius: 20px;
+    padding: 28px 24px; max-width: 420px; width: 100%;
+    box-shadow: 0 16px 64px rgba(0,0,0,0.25);
+  }
+  .sync-modal-inner h3 { font-family: 'Playfair Display', serif; color: var(--sea-deep); margin-bottom: 6px; font-size: 1.2rem; }
+  .sync-modal-inner p { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.55; }
+  .sync-input-group { margin-bottom: 14px; }
+  .sync-input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .sync-input-group input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--sand-dark);
+    border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    background: var(--sand); outline: none; transition: border-color 0.2s;
+  }
+  .sync-input-group input:focus { border-color: var(--sea-light); background: white; }
+  .sync-input-group small { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--text-muted); }
+  .sync-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .sync-btn-cancel { flex: 1; padding: 11px; border: 1.5px solid var(--sand-dark); background: white; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 600; color: var(--text-muted); }
+  .sync-btn-save { flex: 2; padding: 11px; background: var(--sea); color: white; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.95rem; }
+  .sync-btn-save:hover { background: var(--sea-light); }
+  .sync-step {
+    background: var(--sand); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 12px; font-size: 0.8rem; line-height: 1.6;
+    border-left: 3px solid var(--sea-light);
+  }
+  .sync-step strong { color: var(--sea-deep); display: block; margin-bottom: 3px; }
+
   /* SHEETS STATUS INDICATOR */
   .sheets-status {
     display: flex;
@@ -515,7 +667,10 @@
   window.fbSave = function(data) {
     if (!window._fbReady) return;
     const { db, ref, set } = window._fb;
-    set(ref(db, 'bagno_capri'), data).catch(e => console.warn('FB save error:', e));
+    if (typeof setSyncStatus === 'function') setSyncStatus('syncing', 'Sync...');
+    set(ref(db, 'bagno_capri'), data)
+      .then(() => { if (typeof setSyncStatus === 'function') setSyncStatus('ok', 'Sync ✓'); })
+      .catch(e => { console.warn('FB save error:', e); if (typeof setSyncStatus === 'function') setSyncStatus('error', 'Errore'); });
   };
 
   window.fbListen = function(callback) {
@@ -523,7 +678,14 @@
     const { db, ref, onValue } = window._fb;
     onValue(ref(db, 'bagno_capri'), (snapshot) => {
       const data = snapshot.val();
+      if (typeof setSyncStatus === 'function') setSyncStatus('ok', 'Sync ✓');
+      // Aggiorna ora ultimo sync nel modal
+      var lu = document.getElementById('sync-last-update');
+      if (lu) lu.textContent = new Date().toLocaleTimeString('it-IT');
       if (data) callback(data);
+    }, (err) => {
+      console.warn('FB listen error:', err);
+      if (typeof setSyncStatus === 'function') setSyncStatus('error', 'Errore');
     });
   };
 
@@ -592,6 +754,10 @@
         <span style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--sand);">Bagno <span style="color:var(--gold)">Capri</span></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
+        <div class="sync-status" onclick="openSyncModal()" title="Sincronizzazione Multi-Dispositivo">
+          <div class="sync-dot offline" id="sync-dot"></div>
+          <span id="sync-label" style="color:rgba(255,255,255,0.7)">Sync</span>
+        </div>
         <div class="sheets-status" onclick="toggleSheetsDebug()" title="Stato Google Sheets">
           <div class="sheets-dot" id="sheets-dot"></div>
           <span id="sheets-label" style="color:rgba(255,255,255,0.7)">Sheets</span>
@@ -1705,5 +1871,245 @@ if(!sessionStorage.getItem('mmt_unlocked')) initLogin();
 else document.getElementById('login-screen').classList.add('hidden');
 renderTableGrid();renderCatTabs();renderMenuGrid();updateKitchenBadge();
 </script>
+<!-- ===== AI ASSISTANT ===== -->
+<button id="ai-fab" onclick="toggleAI()" title="Assistente Virtuale Capri">🤖</button>
+
+<div id="ai-panel">
+  <div id="ai-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:1.4rem">🤖</div>
+      <div>
+        <div style="font-weight:700;font-size:0.95rem">Assistente Capri</div>
+        <div style="font-size:0.72rem;opacity:0.75">Powered by Claude AI</div>
+      </div>
+    </div>
+    <button id="ai-header-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div id="ai-messages">
+    <div class="ai-msg bot">
+      <div class="ai-avatar">🤖</div>
+      <div class="ai-bubble">👋 Ciao! Sono l'assistente di <strong>Bagno Capri</strong>.<br>Posso aiutarti con ordini, menu, sincronizzazione e molto altro. Cosa ti serve?</div>
+    </div>
+  </div>
+  <div class="ai-suggestions">
+    <div class="ai-chip" onclick="aiAsk('Come invio un ordine in cucina?')">🚀 Inviare ordini</div>
+    <div class="ai-chip" onclick="aiAsk('Come funziona la sincronizzazione multi-dispositivo?')">🔄 Sync dispositivi</div>
+    <div class="ai-chip" onclick="aiAsk('Come unisco due tavoli?')">🔗 Unire tavoli</div>
+    <div class="ai-chip" onclick="aiAsk('Come aggiungo un nuovo piatto al menu?')">🍽️ Aggiungere piatti</div>
+  </div>
+  <div id="ai-apikey-bar" style="display:none">
+    <span>🔑</span>
+    <input id="ai-apikey-input" type="password" placeholder="Inserisci la tua API key Anthropic...">
+    <button id="ai-apikey-save" onclick="saveAiApiKey()">Salva</button>
+  </div>
+  <div id="ai-input-area">
+    <input id="ai-input" placeholder="Scrivi un messaggio..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendAI()">
+    <button id="ai-send-btn" onclick="sendAI()">➤</button>
+  </div>
+</div>
+
+<!-- ===== SYNC STATUS MODAL ===== -->
+<div id="sync-modal" onclick="if(event.target===this)closeSyncModal()">
+  <div class="sync-modal-inner">
+    <h3>🔄 Sincronizzazione Multi-Dispositivo</h3>
+    <div class="sync-step">
+      <strong>Stato connessione Firebase:</strong>
+      <span id="sync-status-msg" style="font-size:0.85rem;font-weight:600;color:var(--sea)">Connessione in corso...</span>
+    </div>
+    <p style="margin-bottom:10px">Il progetto Firebase <strong>bagno-capri</strong> è già configurato. Tutti i dispositivi connessi alla stessa rete si sincronizzano automaticamente in tempo reale.</p>
+    <div class="sync-step">
+      <strong>Come usare su più dispositivi:</strong>
+      Apri questo file HTML sullo stesso server (o condividilo in rete locale) su tutti i tablet/telefoni del bagno. I dati (ordini, menu) saranno sincronizzati automaticamente tramite Firebase.
+    </div>
+    <div class="sync-step">
+      <strong>Ultimo aggiornamento ricevuto:</strong>
+      <span id="sync-last-update">—</span>
+    </div>
+    <div class="sync-actions">
+      <button class="sync-btn-cancel" onclick="closeSyncModal()">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SYNC STATUS BADGE — integrato con Firebase esistente
+// ============================================================
+function setSyncStatus(status, label) {
+  var dot = document.getElementById('sync-dot');
+  var lbl = document.getElementById('sync-label');
+  if (dot) { dot.className = 'sync-dot ' + status; }
+  if (lbl) lbl.textContent = label || 'Sync';
+}
+
+function openSyncModal() {
+  document.getElementById('sync-modal').classList.add('open');
+  // Aggiorna stato mostrato nel modal
+  var dot = document.getElementById('sync-dot');
+  var isOk = dot && dot.classList.contains('ok');
+  var isErr = dot && dot.classList.contains('error');
+  var msg = document.getElementById('sync-status-msg');
+  if (msg) {
+    if (isOk) { msg.textContent = '✅ Connesso e sincronizzato'; msg.style.color = 'var(--success)'; }
+    else if (isErr) { msg.textContent = '❌ Errore di connessione'; msg.style.color = 'var(--coral)'; }
+    else { msg.textContent = '⏳ Connessione in corso...'; msg.style.color = 'var(--warning)'; }
+  }
+}
+function closeSyncModal() { document.getElementById('sync-modal').classList.remove('open'); }
+
+// Badge iniziale: "Connessione..."
+setSyncStatus('syncing', 'Connessione...');
+
+// ============================================================
+// ASSISTENTE VIRTUALE — Claude AI
+// ============================================================
+var aiOpen = false;
+var aiMessages = [];
+var aiTyping = false;
+var aiApiKey = localStorage.getItem('mmt_ai_key') || '';
+
+var AI_SYSTEM_PROMPT = `Sei l'assistente virtuale di "Bagno Capri", un'app gestionale per uno stabilimento balneare italiano. Rispondi SEMPRE in italiano, in modo conciso, pratico e amichevole.
+
+FUNZIONALITÀ DELL'APP:
+- 🗺️ MAPPA: Visualizza tutti i posti (tavoli interni, pedane, spiagge, banconi, divani). Clicca su un posto per selezionarlo e aprire il carrello.
+- 🍽️ BAR/ORDINI: Seleziona un tavolo dalla mappa → aggiungi piatti → personalizza ingredienti → aggiungi note → "Invia in Cucina". Puoi fare più ordini sullo stesso tavolo (si sommano).
+- 🔥 CUCINA: Mostra tutti gli ordini in tempo reale con timer di attesa. Premi "Pronto & Servito" per completare, oppure la X per cancellare.
+- 📋 MENU: Gestisci il menu — aggiungi, modifica, abilita/disabilita piatti. L'asterisco (*) indica prodotti surgelati.
+- 💳 PAGAMENTO: Dal carrello premi "Paga & Libera Tavolo" per chiudere il conto. I dati vanno automaticamente su Google Sheets.
+- 🔗 UNISCI TAVOLI: Premi "Unisci tavoli" → seleziona i tavoli da unire → "Unisci". Il conto viene combinato.
+- 🔑 PIN: Accesso con PIN a 4 cifre. Cambiabile con il tasto "PIN" nell'header.
+- 📊 GOOGLE SHEETS: Ogni pagamento registra data, ora, tavolo, coperti, prodotti, prezzi e totale.
+- 🔄 SYNC: Firebase sincronizza ordini e menu in tempo reale su tutti i dispositivi del bagno.
+
+RISOLUZIONE PROBLEMI:
+- "Ordine non visto in cucina": Verifica di aver premuto "Invia in Cucina" (non solo aggiunto al carrello).
+- "Tavolo ancora occupato": Usa "Paga & Libera Tavolo" dal carrello o dalla mappa.
+- "Sync non funziona": Verifica URL Firebase e regole database (devono permettere lettura/scrittura). Controlla badge "Sync" nell'header.
+- "Google Sheets non riceve": Fai "Test Sheets" nella sezione Menu. Controlla l'URL webhook nel codice.
+- "Ho perso il PIN": Il PIN è in localStorage. Da browser: F12 → Application → Local Storage → cancella 'mmt_pin'.
+- "Ordine errato in cucina": Usa il bottone X sull'ordine in cucina per cancellarlo, poi riordina.
+- "Menu non aggiornato su altri dispositivi": Con Firebase attivo, il menu si sincronizza in ~4 secondi. Senza Firebase, i menu sono separati per dispositivo.
+
+FUNZIONALITÀ AVANZATE:
+- L'app funziona offline (dati in localStorage). Firebase aggiunge sync in tempo reale.
+- I prodotti con * sono surgelati (indicato nelle note cucina).
+- Gli ingredienti possono essere rimossi o aggiunti (extra) per ogni piatto ordinato.
+- Il badge rosso sulla tab "Cucina" mostra quanti ordini sono in attesa.
+- La mappa mostra rosso=occupato, verde-scuro=selezionato, oro=tavoli uniti.
+
+Se non sai rispondere a qualcosa, dillo onestamente. Non inventare funzioni che non esistono. Sii sempre positivo e utile.`;
+
+function toggleAI() {
+  aiOpen = !aiOpen;
+  var panel = document.getElementById('ai-panel');
+  var fab = document.getElementById('ai-fab');
+  panel.classList.toggle('open', aiOpen);
+  fab.classList.toggle('open', aiOpen);
+  if (aiOpen) {
+    checkAiApiKey();
+    setTimeout(function() { document.getElementById('ai-input').focus(); }, 300);
+  }
+}
+
+function checkAiApiKey() {
+  var bar = document.getElementById('ai-apikey-bar');
+  if (!aiApiKey) {
+    bar.style.display = 'flex';
+    document.getElementById('ai-apikey-input').value = '';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function saveAiApiKey() {
+  var val = document.getElementById('ai-apikey-input').value.trim();
+  if (!val || !val.startsWith('sk-ant-')) {
+    showToast('⚠️ Inserisci una API key Anthropic valida (inizia con sk-ant-)');
+    return;
+  }
+  aiApiKey = val;
+  localStorage.setItem('mmt_ai_key', aiApiKey);
+  document.getElementById('ai-apikey-bar').style.display = 'none';
+  showToast('🔑 API key salvata!');
+}
+
+function aiAsk(text) {
+  document.getElementById('ai-input').value = text;
+  sendAI();
+}
+
+function renderAIMessages() {
+  var container = document.getElementById('ai-messages');
+  var html = aiMessages.map(function(m) {
+    var isUser = m.role === 'user';
+    return '<div class="ai-msg ' + (isUser ? 'user' : 'bot') + '">'
+      + (isUser ? '' : '<div class="ai-avatar">🤖</div>')
+      + '<div class="ai-bubble">' + m.content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') + '</div>'
+      + (isUser ? '<div class="ai-avatar">👤</div>' : '')
+      + '</div>';
+  }).join('');
+  if (aiTyping) {
+    html += '<div class="ai-msg bot"><div class="ai-avatar">🤖</div><div class="ai-bubble ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>';
+  }
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendAI() {
+  var input = document.getElementById('ai-input');
+  var text = input.value.trim();
+  if (!text || aiTyping) return;
+
+  if (!aiApiKey) {
+    document.getElementById('ai-apikey-bar').style.display = 'flex';
+    document.getElementById('ai-apikey-input').focus();
+    showToast('🔑 Inserisci la tua API key Anthropic per usare l\'assistente');
+    return;
+  }
+
+  input.value = '';
+  document.getElementById('ai-send-btn').disabled = true;
+  aiMessages.push({ role: 'user', content: text });
+  aiTyping = true;
+  renderAIMessages();
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aiApiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system: AI_SYSTEM_PROMPT,
+        messages: aiMessages.slice(-10)
+      })
+    });
+
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    var reply = data.content && data.content[0] ? data.content[0].text : 'Errore nella risposta.';
+    aiMessages.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    var errMsg = err.message || 'Errore di connessione';
+    if (errMsg.includes('401') || errMsg.includes('invalid')) {
+      aiApiKey = '';
+      localStorage.removeItem('mmt_ai_key');
+      aiMessages.push({ role: 'assistant', content: '⚠️ API key non valida. Aggiorna la chiave nel campo in basso.' });
+      document.getElementById('ai-apikey-bar').style.display = 'flex';
+    } else {
+      aiMessages.push({ role: 'assistant', content: '⚠️ Errore: ' + errMsg + '. Riprova tra un momento.' });
+    }
+  }
+
+  aiTyping = false;
+  document.getElementById('ai-send-btn').disabled = false;
+  renderAIMessages();
+  document.getElementById('ai-input').focus();
+}
+</script>
 </body>
-</html>

@@ -212,7 +212,178 @@
   }
   .ai-chip:hover { background: var(--sea); color: white; border-color: var(--sea); }
 
-  /* ===== SYNC BADGE ===== */
+  /* ===== SPLIT PAYMENT MODAL ===== */
+  #paga-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 600;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  #paga-modal.open { display: flex; }
+  .paga-sheet {
+    background: var(--white); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 700px;
+    box-shadow: 0 -8px 48px rgba(0,0,0,0.25);
+    max-height: 92vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    animation: slideUp 0.28s cubic-bezier(0.34,1.4,0.64,1);
+  }
+  .paga-handle {
+    width: 40px; height: 4px; background: var(--sand-dark);
+    border-radius: 2px; margin: 12px auto 0;
+  }
+  .paga-header {
+    padding: 14px 20px 12px; border-bottom: 1px solid var(--sand-dark);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .paga-header h3 { font-family: 'Playfair Display', serif; color: var(--sea-deep); font-size: 1.15rem; }
+  .paga-close {
+    width: 32px; height: 32px; background: var(--sand-dark); border: none;
+    border-radius: 50%; cursor: pointer; font-size: 1rem; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .paga-close:hover { background: var(--coral); color: white; }
+
+  /* Tabs modalità */
+  .paga-mode-tabs {
+    display: flex; gap: 6px; padding: 12px 16px 0; flex-shrink: 0;
+  }
+  .paga-mode-tab {
+    flex: 1; padding: 9px 8px; border: 2px solid var(--sand-dark);
+    border-radius: 10px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+    background: white; text-align: center; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .paga-mode-tab.active {
+    border-color: var(--sea); background: var(--sea); color: white;
+  }
+  .paga-mode-tab:hover:not(.active) { border-color: var(--sea-light); color: var(--sea); }
+  .paga-mode-tab .tab-icon { font-size: 1.2rem; }
+
+  /* Body area */
+  .paga-body {
+    flex: 1; overflow-y: auto; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .paga-body::-webkit-scrollbar { width: 4px; }
+  .paga-body::-webkit-scrollbar-thumb { background: var(--sand-dark); border-radius: 2px; }
+
+  /* Riepilogo totale */
+  .paga-totale-banner {
+    background: var(--sea-deep); color: white; border-radius: 12px;
+    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .paga-totale-label { font-size: 0.8rem; opacity: 0.8; }
+  .paga-totale-val { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; }
+
+  /* Mode: Dividi equamente */
+  .dividi-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--sand); border-radius: 12px; padding: 14px 16px;
+  }
+  .dividi-num-ctrl { display: flex; align-items: center; gap: 12px; }
+  .dividi-btn {
+    width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--sea);
+    background: white; color: var(--sea); font-size: 1.3rem; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .dividi-btn:hover { background: var(--sea); color: white; }
+  .dividi-num { font-size: 1.6rem; font-weight: 800; color: var(--sea-deep); min-width: 30px; text-align: center; }
+  .dividi-risultato {
+    background: white; border: 2px solid var(--sea-light); border-radius: 12px;
+    padding: 14px 16px; text-align: center;
+  }
+  .dividi-quota { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--sea-deep); }
+  .dividi-quota-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* Mode: Per piatto */
+  .persona-block {
+    background: var(--sand); border-radius: 14px; overflow: hidden;
+    border: 2px solid transparent; transition: border-color 0.2s;
+  }
+  .persona-block.has-items { border-color: var(--sea-light); }
+  .persona-header {
+    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(90deg, var(--sea-deep), var(--sea-light)); color: white;
+  }
+  .persona-name { font-weight: 700; font-size: 0.9rem; }
+  .persona-subtot { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
+  .piatti-list { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .piatto-row {
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    background: white; border-radius: 9px; cursor: pointer; transition: all 0.15s;
+    border: 2px solid transparent;
+  }
+  .piatto-row:hover { border-color: var(--sea-light); }
+  .piatto-row.selected { background: #e8f6f9; border-color: var(--sea-light); }
+  .piatto-row.assigned-other { opacity: 0.4; cursor: not-allowed; }
+  .piatto-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--sand-dark); background: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; transition: all 0.15s; }
+  .piatto-row.selected .piatto-check { background: var(--sea); border-color: var(--sea); color: white; }
+  .piatto-emoji { font-size: 1.1rem; flex-shrink: 0; }
+  .piatto-nome { flex: 1; font-size: 0.85rem; font-weight: 500; }
+  .piatto-qty-badge { font-size: 0.7rem; background: var(--sand-dark); padding: 2px 7px; border-radius: 10px; color: var(--text-muted); font-weight: 600; }
+  .piatto-prezzo { font-weight: 700; color: var(--gold); font-size: 0.88rem; min-width: 48px; text-align: right; }
+  .aggiungi-persona-btn {
+    width: 100%; padding: 10px; background: white; border: 2px dashed var(--sand-dark);
+    border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .aggiungi-persona-btn:hover { border-color: var(--sea); color: var(--sea); }
+  .resto-block {
+    background: #fef9ee; border: 2px dashed var(--gold); border-radius: 12px;
+    padding: 10px 14px; font-size: 0.82rem; color: var(--warning);
+  }
+
+  /* Footer paga */
+  .paga-footer {
+    padding: 12px 16px 20px; border-top: 1px solid var(--sand-dark); flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .btn-paga-finale {
+    width: 100%; padding: 15px; background: var(--gold); color: white;
+    border: none; border-radius: 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-paga-finale:hover { background: #b5823c; transform: translateY(-1px); }
+  .btn-paga-finale:disabled { background: var(--sand-dark); color: var(--text-muted); cursor: not-allowed; transform: none; }
+
+  /* ===== MINI CALCOLATRICE ===== */
+  .calc-toggle-btn {
+    background: var(--sand); border: 1.5px solid var(--sand-dark); border-radius: 10px;
+    padding: 8px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .calc-toggle-btn:hover { background: var(--sea); color: white; border-color: var(--sea); }
+  .calc-wrap {
+    background: var(--sea-deep); border-radius: 16px; padding: 14px;
+    display: none; flex-shrink: 0;
+  }
+  .calc-wrap.open { display: block; }
+  .calc-display {
+    background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 14px;
+    text-align: right; margin-bottom: 10px;
+  }
+  .calc-expr { font-size: 0.72rem; color: rgba(255,255,255,0.5); min-height: 16px; }
+  .calc-val { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: white; }
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .calc-btn {
+    padding: 11px 0; border: none; border-radius: 9px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    background: rgba(255,255,255,0.12); color: white;
+  }
+  .calc-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.06); }
+  .calc-btn:active { transform: scale(0.96); }
+  .calc-btn.op { background: rgba(201,149,74,0.5); color: var(--sand); }
+  .calc-btn.op:hover { background: var(--gold); color: white; }
+  .calc-btn.eq { background: var(--gold); color: white; grid-row: span 2; font-size: 1.3rem; }
+  .calc-btn.eq:hover { background: #b5823c; }
+  .calc-btn.clr { background: rgba(224,92,58,0.4); color: #ffc5b8; }
+  .calc-btn.clr:hover { background: var(--coral); color: white; }
+  .calc-btn.zero { grid-column: span 2; }
   .sync-status {
     display: flex; align-items: center; gap: 5px; padding: 4px 10px;
     border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer;
@@ -782,7 +953,7 @@
     <div class="map-selector">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="section-title" style="margin:0">🗺️ Mappa Bagno Capri</div>
-        <button id="libera-tavolo-btn" style="display:none;align-items:center;gap:6px;background:var(--coral);color:white;border:none;border-radius:9px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">
+        <button id="libera-tavolo-btn" style="display:none;align-items:center;gap:6px;background:var(--coral);color:white;border:none;border-radius:9px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer" onclick="openPagaModal()">
           💳 Paga &amp; Libera Tavolo
         </button>
       </div>
@@ -849,7 +1020,7 @@
               <span id="cart-total-all" style="font-size:1.15rem;font-weight:800;color:var(--gold)">€ 0,00</span>
             </div>
             <button class="btn-send" id="btn-invia" onclick="sendOrder()" disabled style="margin-bottom:8px">🚀 Invia in Cucina</button>
-            <button id="btn-paga-cart" onclick="pagaFromCart()" style="display:none;width:100%;padding:12px;background:var(--gold);color:white;border:none;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer">💳 Paga &amp; Libera Tavolo</button>
+            <button id="btn-paga-cart" onclick="openPagaModal()" style="display:none;width:100%;padding:12px;background:var(--gold);color:white;border:none;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer">💳 Paga &amp; Libera Tavolo</button>
           </div>
         </div>
       </div>
@@ -1860,7 +2031,284 @@ function showToast(msg) {
   document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
 }
 
-// Auto refresh
+// ============ SPLIT PAYMENT ============
+var pagaMode = 'unico';
+var persone = [];
+var pagaOrders = [];
+
+function openPagaModal() {
+  var tOrd = selectedTable
+    ? orders.filter(function(o){ return o.table===selectedTable && o.status!=='annullato'; })
+    : [];
+  if (!tOrd.length) { showToast('⚠️ Nessun ordine attivo per questo tavolo'); return; }
+  pagaOrders = tOrd;
+  var label = getSpotLabel(tOrd[0].table);
+  var totalAmount = calcTotalePagaOrders();
+
+  document.getElementById('paga-label-tavolo').textContent = label;
+  document.getElementById('paga-totale-txt').textContent = '€ ' + totalAmount.toFixed(2).replace('.',',');
+  document.getElementById('paga-coperti-txt').textContent = coperti ? coperti + ' pers.' : '—';
+
+  // Init persone: 2 di default o quanti sono i coperti
+  var n = coperti > 0 ? coperti : 2;
+  persone = [];
+  for (var i=1; i<=n; i++) persone.push({ name: 'Persona '+i, items: [] });
+
+  pagaMode = 'unico';
+  document.querySelectorAll('.paga-mode-tab').forEach(function(t,idx){ t.classList.toggle('active', idx===0); });
+
+  renderPagaBody();
+  document.getElementById('paga-modal').classList.add('open');
+}
+
+function closePagaModal() {
+  document.getElementById('paga-modal').classList.remove('open');
+  calcExpr = ''; calcVal = '0'; calcHasResult = false;
+  document.getElementById('calc-wrap').classList.remove('open');
+}
+
+function setPagaMode(mode, btn) {
+  pagaMode = mode;
+  document.querySelectorAll('.paga-mode-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderPagaBody();
+}
+
+function calcTotalePagaOrders() {
+  return pagaOrders.reduce(function(s,o){
+    return s + (o.items||[]).reduce(function(ss,i){ return ss + (i.price||0)*(i.qty||1); }, 0);
+  }, 0);
+}
+
+// Costruisce lista piatti flat (espansa per quantità)
+function buildFlatItems() {
+  var flat = [];
+  pagaOrders.forEach(function(o) {
+    (o.items||[]).forEach(function(item) {
+      for (var q=0; q<(item.qty||1); q++) {
+        flat.push({
+          uid: o.id + '-' + item.id + '-' + item.name + '-' + q,
+          emoji: item.emoji||'🍽️',
+          name: item.name,
+          price: item.price||0,
+          note: (item.removed&&item.removed.length ? '−'+item.removed.join(',') : '') + (item.extra&&item.extra.length ? ' +'+item.extra.join(',') : '')
+        });
+      }
+    });
+  });
+  return flat;
+}
+
+function renderPagaBody() {
+  var body = document.getElementById('paga-body');
+  var totalAmount = calcTotalePagaOrders();
+  var footerInfo = document.getElementById('paga-footer-info');
+  var btnFinale = document.getElementById('btn-paga-finale');
+
+  if (pagaMode === 'unico') {
+    body.innerHTML = '<div style="background:var(--sand);border-radius:14px;padding:14px 16px">' +
+      '<div style="font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Riepilogo ordine</div>' +
+      buildFlatItems().map(function(it){
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sand-dark)">' +
+          '<span style="font-size:1.1rem">'+it.emoji+'</span>' +
+          '<span style="flex:1;font-size:0.88rem;font-weight:500">'+it.name+(it.note?'<br><small style="color:var(--text-muted)">'+it.note+'</small>':'')+'</span>' +
+          '<span style="font-weight:700;color:var(--gold)">€ '+it.price.toFixed(2).replace('.',',')+'</span>' +
+          '</div>';
+      }).join('') +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:4px">' +
+      '<span style="font-weight:700;font-size:0.85rem;color:var(--text-muted)">TOTALE</span>' +
+      '<span style="font-family:\'Playfair Display\',serif;font-size:1.35rem;font-weight:700;color:var(--sea-deep)">€ '+totalAmount.toFixed(2).replace('.',',')+'</span>' +
+      '</div></div>';
+    footerInfo.textContent = '';
+    btnFinale.disabled = false;
+    btnFinale.textContent = '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',');
+
+  } else if (pagaMode === 'dividi') {
+    var n = persone.length;
+    var quota = n > 0 ? totalAmount / n : 0;
+    body.innerHTML =
+      '<div class="dividi-row">' +
+        '<div><div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:6px">Numero persone</div>' +
+        '<div class="dividi-num-ctrl">' +
+          '<button class="dividi-btn" onclick="changeDividiN(-1)">−</button>' +
+          '<span class="dividi-num" id="dividi-n">'+n+'</span>' +
+          '<button class="dividi-btn" onclick="changeDividiN(1)">＋</button>' +
+        '</div></div>' +
+        '<div class="dividi-risultato">' +
+          '<div class="dividi-quota" id="dividi-quota">€ '+quota.toFixed(2).replace('.',',')+'</div>' +
+          '<div class="dividi-quota-label">a persona</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:var(--sand);border-radius:12px;padding:12px 14px">' +
+        buildFlatItems().map(function(it){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #e8d9b5;font-size:0.83rem">' +
+            '<span>'+it.emoji+'</span><span style="flex:1">'+it.name+'</span>' +
+            '<span style="color:var(--text-muted)">÷'+n+' =</span>' +
+            '<span style="font-weight:700;color:var(--gold);min-width:52px;text-align:right">€ '+(it.price/n).toFixed(2).replace('.',',')+'</span></div>';
+        }).join('') +
+      '</div>';
+    footerInfo.textContent = n + ' persone × € ' + quota.toFixed(2).replace('.',',');
+    btnFinale.disabled = false;
+    btnFinale.textContent = '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',');
+
+  } else if (pagaMode === 'piatti') {
+    renderPiattiMode();
+  }
+}
+
+function changeDividiN(delta) {
+  var n = persone.length + delta;
+  if (n < 1) n = 1;
+  if (n > 20) n = 20;
+  persone = [];
+  for (var i=1; i<=n; i++) persone.push({ name: 'Persona '+i, items: [] });
+  var total = calcTotalePagaOrders();
+  var quota = total / n;
+  var el = document.getElementById('dividi-n');
+  var eq = document.getElementById('dividi-quota');
+  if (el) el.textContent = n;
+  if (eq) eq.textContent = '€ '+quota.toFixed(2).replace('.',',');
+  var footerInfo = document.getElementById('paga-footer-info');
+  if (footerInfo) footerInfo.textContent = n + ' persone × € '+quota.toFixed(2).replace('.',',');
+  // Re-render body to update per-item split
+  renderPagaBody();
+}
+
+function renderPiattiMode() {
+  var body = document.getElementById('paga-body');
+  var flat = buildFlatItems();
+  var assigned = {};
+  persone.forEach(function(p,pi) {
+    (p.items||[]).forEach(function(uid){ assigned[uid] = pi; });
+  });
+
+  var totalAssigned = 0;
+  persone.forEach(function(p){ p.items.forEach(function(uid){ var it=flat.find(function(f){return f.uid===uid;}); if(it) totalAssigned+=it.price; }); });
+  var totalAmount = calcTotalePagaOrders();
+  var totalResto = totalAmount - totalAssigned;
+
+  var html = persone.map(function(p, pi) {
+    var subTot = (p.items||[]).reduce(function(s,uid){ var it=flat.find(function(f){return f.uid===uid;}); return s+(it?it.price:0); },0);
+    return '<div class="persona-block'+(p.items.length?' has-items':'')+'" id="persona-block-'+pi+'">' +
+      '<div class="persona-header">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:1.1rem">👤</span>' +
+          '<input style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:white;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;font-weight:700;outline:none;width:100px" ' +
+          'value="'+p.name+'" onchange="persone['+pi+'].name=this.value">' +
+        '</div>' +
+        '<div class="persona-subtot">€ '+subTot.toFixed(2).replace('.',',')+'</div>' +
+      '</div>' +
+      '<div class="piatti-list">' +
+        flat.map(function(it) {
+          var isSel = (p.items||[]).includes(it.uid);
+          var isOther = !isSel && assigned[it.uid] !== undefined;
+          return '<div class="piatto-row'+(isSel?' selected':'')+(isOther?' assigned-other':'')+'" onclick="togglePiattoPersona('+pi+',\''+it.uid+'\')">' +
+            '<div class="piatto-check">'+(isSel?'✓':'')+'</div>' +
+            '<span class="piatto-emoji">'+it.emoji+'</span>' +
+            '<span class="piatto-nome">'+it.name+(it.note?'<br><small style="color:var(--text-muted)">'+it.note+'</small>':'')+'</span>' +
+            '<span class="piatto-prezzo">€ '+it.price.toFixed(2).replace('.',',')+'</span>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Resto non assegnato
+  if (totalResto > 0.005) {
+    html += '<div class="resto-block">⚠️ Ancora <strong>€ '+totalResto.toFixed(2).replace('.',',')+'</strong> non assegnati</div>';
+  }
+
+  html += '<button class="aggiungi-persona-btn" onclick="addPersona()">＋ Aggiungi persona</button>';
+
+  body.innerHTML = html;
+
+  var btnFinale = document.getElementById('btn-paga-finale');
+  var footerInfo = document.getElementById('paga-footer-info');
+  var allOk = totalResto <= 0.005;
+  btnFinale.disabled = !allOk;
+  btnFinale.textContent = allOk ? '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',') : '⚠️ Assegna tutti i piatti per procedere';
+  if (footerInfo) footerInfo.textContent = persone.length + ' persone · assegnato € '+ totalAssigned.toFixed(2).replace('.',',');
+}
+
+function togglePiattoPersona(pi, uid) {
+  var flat = buildFlatItems();
+  var it = flat.find(function(f){ return f.uid===uid; });
+  if (!it) return;
+  // Già assegnato a un'altra persona?
+  var otherIdx = -1;
+  persone.forEach(function(p,i){ if(i!==pi && (p.items||[]).includes(uid)) otherIdx=i; });
+  if (otherIdx !== -1) return; // blocca
+
+  var p = persone[pi];
+  var idx = (p.items||[]).indexOf(uid);
+  if (idx !== -1) p.items.splice(idx,1);
+  else { if(!p.items) p.items=[]; p.items.push(uid); }
+  renderPiattiMode();
+}
+
+function addPersona() {
+  persone.push({ name: 'Persona '+(persone.length+1), items: [] });
+  renderPiattiMode();
+}
+
+function eseguiPagamento() {
+  if (!pagaOrders.length) return;
+  var label = getSpotLabel(pagaOrders[0].table);
+  var sessionId = pagaOrders[0].sessionId || pagaOrders[0].id;
+  orders.forEach(function(o){ if((o.sessionId||o.id)==sessionId) o.status='done'; });
+  history.forEach(function(o){ if((o.sessionId||o.id)==sessionId&&o.status!=='annullato') o.status='completato'; });
+  orders = orders.filter(function(o){ return (o.sessionId||o.id)!=sessionId; });
+  sendToSheets(label, pagaOrders, coperti);
+  save();
+  showToast('💳 '+label+' — Conto chiuso!');
+  closePagaModal();
+  closeCart();
+  renderTableGrid(); renderKitchen(); updateKitchenBadge();
+}
+
+// ============ CALCOLATRICE ============
+var calcVal = '0';
+var calcExpr = '';
+var calcHasResult = false;
+
+function toggleCalc() {
+  var w = document.getElementById('calc-wrap');
+  w.classList.toggle('open');
+}
+
+function calcPress(k) {
+  if (k === 'AC') { calcVal='0'; calcExpr=''; calcHasResult=false; }
+  else if (k === '±') { calcVal = (parseFloat(calcVal)||0)*-1 + ''; }
+  else if (k === '%') { calcVal = (parseFloat(calcVal)||0)/100 + ''; }
+  else if (k === '=') {
+    try {
+      var expr = calcExpr + calcVal;
+      // safe eval
+      var result = Function('"use strict"; return ('+expr+')')();
+      calcExpr = expr + ' =';
+      calcVal = parseFloat(result.toFixed(8)) + '';
+      calcHasResult = true;
+    } catch(e) { calcVal = 'Err'; }
+  }
+  else if (['+','-','*','/'].includes(k)) {
+    if (calcHasResult) { calcExpr = calcVal + ' ' + k + ' '; calcVal = '0'; calcHasResult = false; }
+    else { calcExpr += calcVal + ' ' + k + ' '; calcVal = '0'; }
+  }
+  else if (k === '.') {
+    if (calcHasResult) { calcVal='0.'; calcExpr=''; calcHasResult=false; }
+    else if (!calcVal.includes('.')) calcVal += '.';
+  }
+  else {
+    if (calcHasResult || calcVal === '0') { calcVal = k; calcHasResult = false; }
+    else calcVal += k;
+    if (calcVal.length > 12) calcVal = calcVal.slice(0,-1);
+  }
+  var exprEl = document.getElementById('calc-expr');
+  var valEl = document.getElementById('calc-val');
+  if (exprEl) exprEl.textContent = calcExpr;
+  if (valEl) valEl.textContent = calcVal;
+}
+
 setInterval(function(){
   if(document.getElementById('view-cucina').classList.contains('active')) renderKitchen();
   updateKitchenBadge();
@@ -1871,6 +2319,80 @@ if(!sessionStorage.getItem('mmt_unlocked')) initLogin();
 else document.getElementById('login-screen').classList.add('hidden');
 renderTableGrid();renderCatTabs();renderMenuGrid();updateKitchenBadge();
 </script>
+<!-- ===== MODAL PAGAMENTO SPLIT ===== -->
+<div id="paga-modal" onclick="if(event.target===this)closePagaModal()">
+  <div class="paga-sheet">
+    <div class="paga-handle"></div>
+    <div class="paga-header">
+      <h3>💳 Cassa — <span id="paga-label-tavolo">Tavolo</span></h3>
+      <button class="paga-close" onclick="closePagaModal()">✕</button>
+    </div>
+
+    <!-- Totale banner -->
+    <div style="padding:10px 16px 0;flex-shrink:0">
+      <div class="paga-totale-banner">
+        <div><div class="paga-totale-label">Totale tavolo</div><div id="paga-totale-txt" class="paga-totale-val">€ 0,00</div></div>
+        <div style="text-align:right"><div class="paga-totale-label">Coperti</div><div style="font-size:1.1rem;font-weight:800" id="paga-coperti-txt">—</div></div>
+      </div>
+    </div>
+
+    <!-- Tabs modalità -->
+    <div class="paga-mode-tabs">
+      <button class="paga-mode-tab active" onclick="setPagaMode('unico',this)">
+        <span class="tab-icon">💳</span><span>Conto unico</span>
+      </button>
+      <button class="paga-mode-tab" onclick="setPagaMode('dividi',this)">
+        <span class="tab-icon">➗</span><span>Dividi equamente</span>
+      </button>
+      <button class="paga-mode-tab" onclick="setPagaMode('piatti',this)">
+        <span class="tab-icon">🍽️</span><span>Per piatto</span>
+      </button>
+    </div>
+
+    <!-- Body dinamico -->
+    <div class="paga-body" id="paga-body"></div>
+
+    <!-- Footer -->
+    <div class="paga-footer">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="calc-toggle-btn" onclick="toggleCalc()">🧮 Calcolatrice</button>
+        <span id="paga-footer-info" style="font-size:0.78rem;color:var(--text-muted);flex:1;text-align:right"></span>
+      </div>
+      <!-- Calcolatrice -->
+      <div class="calc-wrap" id="calc-wrap">
+        <div class="calc-display">
+          <div class="calc-expr" id="calc-expr"></div>
+          <div class="calc-val" id="calc-val">0</div>
+        </div>
+        <div class="calc-grid">
+          <button class="calc-btn clr" onclick="calcPress('AC')">AC</button>
+          <button class="calc-btn op" onclick="calcPress('±')">±</button>
+          <button class="calc-btn op" onclick="calcPress('%')">%</button>
+          <button class="calc-btn op" onclick="calcPress('/')">÷</button>
+          <button class="calc-btn" onclick="calcPress('7')">7</button>
+          <button class="calc-btn" onclick="calcPress('8')">8</button>
+          <button class="calc-btn" onclick="calcPress('9')">9</button>
+          <button class="calc-btn op" onclick="calcPress('*')">×</button>
+          <button class="calc-btn" onclick="calcPress('4')">4</button>
+          <button class="calc-btn" onclick="calcPress('5')">5</button>
+          <button class="calc-btn" onclick="calcPress('6')">6</button>
+          <button class="calc-btn op" onclick="calcPress('-')">−</button>
+          <button class="calc-btn" onclick="calcPress('1')">1</button>
+          <button class="calc-btn" onclick="calcPress('2')">2</button>
+          <button class="calc-btn" onclick="calcPress('3')">3</button>
+          <button class="calc-btn op" style="grid-row:span 2" onclick="calcPress('+')">＋</button>
+          <button class="calc-btn zero" onclick="calcPress('0')">0</button>
+          <button class="calc-btn" onclick="calcPress('.')">.</button>
+          <button class="calc-btn eq" onclick="calcPress('=')">=</button>
+        </div>
+      </div>
+      <button class="btn-paga-finale" id="btn-paga-finale" onclick="eseguiPagamento()">
+        💳 Chiudi il conto e libera il tavolo
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== AI ASSISTANT ===== -->
 <button id="ai-fab" onclick="toggleAI()" title="Assistente Virtuale Capri">🤖</button>
 

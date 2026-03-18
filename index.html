@@ -297,24 +297,47 @@
   .dividi-quota { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--sea-deep); }
   .dividi-quota-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
-  /* Mode: Per piatto */
-  .persona-block {
-    background: var(--sand); border-radius: 14px; overflow: hidden;
-    border: 2px solid transparent; transition: border-color 0.2s;
+  /* Mode: Per piatto — lista unica con assegnazione */
+  .split-item-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; background: white; border-radius: 10px;
+    border: 2px solid var(--sand-dark); transition: border-color 0.15s;
   }
+  .split-item-row.assigned { border-color: var(--sea-light); background: #f0f8fa; }
+  .split-item-emoji { font-size: 1.15rem; flex-shrink: 0; }
+  .split-item-name { flex: 1; font-size: 0.84rem; font-weight: 500; min-width: 0; }
+  .split-item-note { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+  .split-item-price { font-weight: 700; color: var(--gold); font-size: 0.84rem; flex-shrink: 0; min-width: 44px; text-align: right; }
+  .split-person-btns { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .split-person-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--sand-dark);
+    background: white; font-size: 0.7rem; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; color: var(--text-muted); flex-shrink: 0;
+  }
+  .split-person-btn:hover { border-color: var(--sea); color: var(--sea); }
+  .split-person-btn.active { border-color: var(--sea); background: var(--sea); color: white; }
+
+  /* Riepilogo persone in fondo */
+  .split-summary {
+    background: var(--sand); border-radius: 12px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .split-summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.85rem;
+  }
+  .split-summary-name { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .split-summary-items { font-size: 0.72rem; color: var(--text-muted); }
+  .split-summary-tot { font-weight: 800; color: var(--sea-deep); font-size: 0.9rem; }
+
+  .persona-block { background: var(--sand); border-radius: 14px; overflow: hidden; border: 2px solid transparent; transition: border-color 0.2s; }
   .persona-block.has-items { border-color: var(--sea-light); }
-  .persona-header {
-    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
-    background: linear-gradient(90deg, var(--sea-deep), var(--sea-light)); color: white;
-  }
+  .persona-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg, var(--sea-deep), var(--sea-light)); color: white; }
   .persona-name { font-weight: 700; font-size: 0.9rem; }
   .persona-subtot { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
   .piatti-list { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
-  .piatto-row {
-    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
-    background: white; border-radius: 9px; cursor: pointer; transition: all 0.15s;
-    border: 2px solid transparent;
-  }
+  .piatto-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: white; border-radius: 9px; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; }
   .piatto-row:hover { border-color: var(--sea-light); }
   .piatto-row.selected { background: #e8f6f9; border-color: var(--sea-light); }
   .piatto-row.assigned-other { opacity: 0.4; cursor: not-allowed; }
@@ -322,19 +345,10 @@
   .piatto-row.selected .piatto-check { background: var(--sea); border-color: var(--sea); color: white; }
   .piatto-emoji { font-size: 1.1rem; flex-shrink: 0; }
   .piatto-nome { flex: 1; font-size: 0.85rem; font-weight: 500; }
-  .piatto-qty-badge { font-size: 0.7rem; background: var(--sand-dark); padding: 2px 7px; border-radius: 10px; color: var(--text-muted); font-weight: 600; }
   .piatto-prezzo { font-weight: 700; color: var(--gold); font-size: 0.88rem; min-width: 48px; text-align: right; }
-  .aggiungi-persona-btn {
-    width: 100%; padding: 10px; background: white; border: 2px dashed var(--sand-dark);
-    border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
-    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
+  .aggiungi-persona-btn { width: 100%; padding: 10px; background: white; border: 2px dashed var(--sand-dark); border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
   .aggiungi-persona-btn:hover { border-color: var(--sea); color: var(--sea); }
-  .resto-block {
-    background: #fef9ee; border: 2px dashed var(--gold); border-radius: 12px;
-    padding: 10px 14px; font-size: 0.82rem; color: var(--warning);
-  }
+  .resto-block { background: #fef9ee; border: 2px dashed var(--gold); border-radius: 12px; padding: 10px 14px; font-size: 0.82rem; color: var(--warning); }
 
   /* Footer paga */
   .paga-footer {
@@ -2307,50 +2321,68 @@ function renderPiattiMode() {
   });
   var totalResto = totalAmount - totalAssigned;
 
-  var html = persone.map(function(p, pi) {
-    var subTot = (p.items||[]).reduce(function(s, uid){
-      var it = flatItemsList[uid]; return s + (it ? it.price : 0);
-    }, 0);
+  // Colori distinti per ogni persona
+  var personColors = ['#1A6B7C','#E05C3A','#2E7D52','#7c3aab','#C9954A','#b05050','#2563eb','#0891b2'];
 
-    var righe = flatItemsList.map(function(it) {
-      var isSel = (p.items||[]).includes(it.uid);
-      var isOther = !isSel && assigned[it.uid] !== undefined;
-      var cls = 'piatto-row' + (isSel?' selected':'') + (isOther?' assigned-other':'');
-      // uid è un intero — safe da usare direttamente in onclick
-      return '<div class="'+cls+'" onclick="'+(isOther?'':'togglePiattoPersona('+pi+','+it.uid+')')+'">'+
-        '<div class="piatto-check">'+(isSel?'✓':'')+'</div>'+
-        '<span class="piatto-emoji">'+it.emoji+'</span>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="piatto-nome">'+it.name+'</div>'+
-          (it.note?'<div style="font-size:0.72rem;color:var(--text-muted)">'+it.note+'</div>':'')+
-        '</div>'+
-        (isOther?'<span style="font-size:0.68rem;color:var(--text-muted);padding:2px 7px;background:var(--sand-dark);border-radius:8px">'+persone[assigned[it.uid]].name+'</span>':'')+
-        '<span class="piatto-prezzo">€ '+it.price.toFixed(2).replace('.',',')+'</span>'+
-      '</div>';
-    }).join('');
-
-    return '<div class="persona-block'+(p.items.length?' has-items':'')+'">'+
-      '<div class="persona-header">'+
-        '<div style="display:flex;align-items:center;gap:8px">'+
-          '<span style="font-size:1.1rem">👤</span>'+
-          '<input style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:white;'+
-          'font-family:\'DM Sans\',sans-serif;font-size:0.9rem;font-weight:700;outline:none;width:110px" '+
-          'value="'+p.name+'" onchange="persone['+pi+'].name=this.value">'+
-        '</div>'+
-        '<div class="persona-subtot">€ '+subTot.toFixed(2).replace('.',',')+'</div>'+
-      '</div>'+
-      '<div class="piatti-list">'+righe+'</div>'+
+  // — INTESTAZIONE PERSONE (nomi editabili) —
+  var headerHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">';
+  persone.forEach(function(p, pi) {
+    var col = personColors[pi % personColors.length];
+    var subTot = (p.items||[]).reduce(function(s,uid){ var it=flatItemsList[uid]; return s+(it?it.price:0); }, 0);
+    headerHtml += '<div style="flex:1;min-width:120px;background:'+col+';border-radius:10px;padding:8px 10px;color:white;">' +
+      '<input style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.5);color:white;' +
+      'font-family:\'DM Sans\',sans-serif;font-size:0.82rem;font-weight:700;outline:none;width:100%;margin-bottom:3px;" ' +
+      'value="'+p.name+'" placeholder="Nome..." onchange="persone['+pi+'].name=this.value;renderPiattiMode()">' +
+      '<div style="font-size:0.78rem;opacity:0.85;">€ '+subTot.toFixed(2).replace('.',',')+'</div>' +
     '</div>';
-  }).join('');
+  });
+  headerHtml += '<button class="aggiungi-persona-btn" style="flex:0 0 auto;min-width:44px;border-radius:10px;padding:8px;" onclick="addPersona()">＋</button>';
+  headerHtml += '</div>';
 
-  if (totalResto > 0.005) {
-    html += '<div class="resto-block">⚠️ Ancora <strong>€ '+totalResto.toFixed(2).replace('.',',')+'</strong> non assegnati a nessuno</div>';
-  } else if (flatItemsList.length > 0) {
-    html += '<div style="background:#f0faf4;border:2px solid #2e7d52;border-radius:12px;padding:10px 14px;font-size:0.82rem;color:#2e7d52;font-weight:600">✅ Tutti i piatti sono stati assegnati!</div>';
+  // — LISTA PIATTI (una riga per piatto, bottoni persona) —
+  var itemsHtml = '<div style="display:flex;flex-direction:column;gap:6px;">';
+  flatItemsList.forEach(function(it) {
+    var assignedTo = assigned[it.uid];
+    var isAssigned = assignedTo !== undefined;
+    var col = isAssigned ? personColors[assignedTo % personColors.length] : null;
+
+    itemsHtml += '<div class="split-item-row'+(isAssigned?' assigned':'')+'" style="'+(isAssigned?'border-color:'+col+';background:'+col+'18;':'')+'">'+
+      '<span class="split-item-emoji">'+it.emoji+'</span>'+
+      '<div class="split-item-name">'+it.name+
+        (it.note ? '<div class="split-item-note">'+it.note+'</div>' : '')+
+      '</div>'+
+      // Bottoni persona
+      '<div class="split-person-btns">';
+
+    persone.forEach(function(p, pi) {
+      var isThis = assignedTo === pi;
+      var c = personColors[pi % personColors.length];
+      var initial = p.name.charAt(0).toUpperCase() || (pi+1);
+      itemsHtml += '<button class="split-person-btn'+(isThis?' active':'')+'" '+
+        'style="'+(isThis?'background:'+c+';border-color:'+c+';color:white;':'border-color:'+c+';color:'+c+';')+'" '+
+        'onclick="assegnaItem('+it.uid+','+pi+')" title="'+p.name+'">'+initial+'</button>';
+    });
+
+    itemsHtml += '</div>'+
+      '<span class="split-item-price">€ '+it.price.toFixed(2).replace('.',',')+'</span>'+
+    '</div>';
+  });
+  itemsHtml += '</div>';
+
+  // — STATUS BARRA —
+  var statusHtml;
+  if (flatItemsList.length === 0) {
+    statusHtml = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:0.85rem;">Nessun piatto in questo ordine</div>';
+  } else if (totalResto > 0.005) {
+    statusHtml = '<div class="resto-block">⚠️ <strong>€ '+totalResto.toFixed(2).replace('.',',')+
+      '</strong> ancora da assegnare — tocca il numero persona accanto a ogni piatto</div>';
+  } else {
+    statusHtml = '<div style="background:#f0faf4;border:2px solid #2e7d52;border-radius:12px;padding:10px 14px;'+
+      'font-size:0.82rem;color:#2e7d52;font-weight:600;display:flex;align-items:center;gap:6px;">'+
+      '✅ Tutto assegnato! Premi il pulsante verde per chiudere il conto.</div>';
   }
-  html += '<button class="aggiungi-persona-btn" onclick="addPersona()">＋ Aggiungi persona</button>';
 
-  body.innerHTML = html;
+  body.innerHTML = headerHtml + itemsHtml + statusHtml;
 
   var btnFinale = document.getElementById('btn-paga-finale');
   var footerInfo = document.getElementById('paga-footer-info');
@@ -2359,28 +2391,24 @@ function renderPiattiMode() {
   btnFinale.textContent = allOk
     ? (isAsp ? '🛍️ Chiudi asporto' : '💳 Chiudi conto') + ' — € '+totalAmount.toFixed(2).replace('.',',')
     : '⚠️ Assegna tutti i piatti per procedere';
-  if(footerInfo) footerInfo.textContent = persone.length+' persone · assegnato € '+totalAssigned.toFixed(2).replace('.',',');
+  if(footerInfo) footerInfo.textContent = persone.length+' pers. · da assegnare: € '+totalResto.toFixed(2).replace('.',',');
 }
 
-function togglePiattoPersona(pi, uid) {
-  // uid è un intero (indice in flatItemsList)
+// Assegna un piatto a una persona (toggle: se già sua, la deseleziona)
+function assegnaItem(uid, pi) {
   uid = parseInt(uid);
-  var p = persone[pi];
-  if (!p) return;
-  if (!p.items) p.items = [];
-  var idx = p.items.indexOf(uid);
-  if (idx !== -1) {
-    p.items.splice(idx, 1); // deseleziona
-  } else {
-    // Rimuovi da altri se già assegnato
-    persone.forEach(function(op, oi){ if(oi!==pi){ var i=op.items.indexOf(uid); if(i!==-1) op.items.splice(i,1); } });
-    p.items.push(uid);
-  }
+  // Controlla se era già assegnata a questa persona
+  var alreadyMine = persone[pi].items.indexOf(uid) !== -1;
+  // Rimuovi da tutti
+  persone.forEach(function(p){ var i=p.items.indexOf(uid); if(i!==-1) p.items.splice(i,1); });
+  // Se non era già di pi, assegna. Se era già di pi, lascia libero (toggle off)
+  if (!alreadyMine) persone[pi].items.push(uid);
   renderPiattiMode();
 }
 
+// Override di addPersona per usare renderPiattiMode
 function addPersona() {
-  persone.push({ name: 'Persona '+(persone.length+1), items: [] });
+  persone.push({ name: 'P'+(persone.length+1), items: [] });
   renderPiattiMode();
 }
 

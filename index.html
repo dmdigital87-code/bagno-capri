@@ -384,6 +384,39 @@
   .calc-btn.clr { background: rgba(224,92,58,0.4); color: #ffc5b8; }
   .calc-btn.clr:hover { background: var(--coral); color: white; }
   .calc-btn.zero { grid-column: span 2; }
+  /* ===== ASPORTO ===== */
+  .asporto-bar {
+    background: var(--white); border-radius: var(--radius);
+    padding: 14px 18px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .btn-asporto-new {
+    padding: 10px 20px; background: linear-gradient(135deg,#e05c3a,#f07050);
+    color: white; border: none; border-radius: 10px; font-family: 'DM Sans',sans-serif;
+    font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .btn-asporto-new:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(224,92,58,0.35); }
+  .asporto-list { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+  .asporto-chip {
+    padding: 7px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; transition: all 0.18s; border: 2px solid transparent;
+    background: var(--sand); color: var(--text);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .asporto-chip:hover { border-color: var(--coral); }
+  .asporto-chip.active { background: var(--coral); color: white; border-color: var(--coral); }
+  .asporto-chip .asp-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); }
+  .asporto-chip.active .asp-dot { background: white; }
+  .asporto-chip .asp-close { opacity: 0.5; font-size: 0.75rem; margin-left: 2px; }
+  .asporto-chip:hover .asp-close { opacity: 1; }
+  .asporto-empty { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+  .asporto-badge {
+    background: var(--coral); color: white; font-size: 0.68rem; font-weight: 800;
+    border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: middle;
+  }
+
   .sync-status {
     display: flex; align-items: center; gap: 5px; padding: 4px 10px;
     border-radius: 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer;
@@ -975,6 +1008,13 @@
         <button class="btn-merge" onclick="confirmMerge()" id="btn-confirm-merge" disabled>🔗 Unisci</button>
       </div>
       <div class="map-canvas" id="map-canvas"></div>
+    </div>
+
+    <div class="asporto-bar">
+      <button class="btn-asporto-new" onclick="newAsporto()">🛍️ Nuovo Asporto</button>
+      <div class="asporto-list" id="asporto-list">
+        <span class="asporto-empty">Nessun ordine asporto attivo</span>
+      </div>
     </div>
 
     <div class="cart-panel" id="cart-panel">
@@ -1575,6 +1615,7 @@ const SVG_W=310,SVG_H=562;
 
 function getSpotLabel(id) {
   if(!id) return '—';
+  if(String(id).startsWith('ASP-')) return '🛍️ Asporto #'+id.replace('ASP-','');
   var spot = MAP_SPOTS.find(s=>s.id===id);
   if(!spot) return id;
   if(spot.type==='spiaggia') return 'Spiaggia '+spot.label;
@@ -1603,7 +1644,7 @@ function showView(v,btn) {
 }
 
 function renderAll() {
-  renderTableGrid(); renderMenuGrid(); renderCatTabs(); renderCart(); renderKitchen(); renderMenuManager();
+  renderTableGrid(); renderMenuGrid(); renderCatTabs(); renderCart(); renderKitchen(); renderMenuManager(); renderAsportoList();
 }
 
 // ============ MAP RENDER ============
@@ -1748,7 +1789,7 @@ function renderMenuGrid() {
 // Ingredienti ordine
 let oisItemId=null,oisRemoved=[],oisExtra=[];
 function addToCart(id) {
-  if(!selectedTable){showToast('⚠️ Seleziona prima un tavolo!');return;}
+  if(!selectedTable){showToast('⚠️ Seleziona un tavolo o crea un ordine Asporto!');return;}
   var item=menu.find(function(i){return i.id===id;});
   if(!item) return;
   if(item.ingredients&&item.ingredients.length>0) openIngSheet(id);
@@ -2031,16 +2072,83 @@ function showToast(msg) {
   document.body.appendChild(t);setTimeout(function(){t.remove();},3000);
 }
 
-// ============ SPLIT PAYMENT ============
+// ============ ASPORTO ============
+var asportoCounter = parseInt(localStorage.getItem('mmt_asp_counter')||'0');
+
+function newAsporto() {
+  asportoCounter++;
+  localStorage.setItem('mmt_asp_counter', asportoCounter);
+  var aspId = 'ASP-' + asportoCounter;
+  selectedTable = aspId; coperti = 0;
+  document.getElementById('coperti-val').textContent = '0';
+  document.getElementById('cart-table-label').textContent = '🛍️ Asporto #' + asportoCounter;
+  var cp = document.getElementById('cart-panel');
+  if(cp) cp.classList.add('visible');
+  renderAsportoList(); renderCart(); updateSendBtn();
+  cart = [];
+  setTimeout(function(){ var cp=document.getElementById('cart-panel'); if(cp) cp.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 100);
+}
+
+function selectAsporto(aspId) {
+  selectedTable = aspId; coperti = 0;
+  var num = aspId.replace('ASP-','');
+  document.getElementById('coperti-val').textContent = '0';
+  document.getElementById('cart-table-label').textContent = '🛍️ Asporto #' + num;
+  var cp = document.getElementById('cart-panel');
+  if(cp) cp.classList.add('visible');
+  renderAsportoList(); renderCart(); updateSendBtn();
+  setTimeout(function(){ var cp=document.getElementById('cart-panel'); if(cp) cp.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 100);
+}
+
+function renderAsportoList() {
+  var el = document.getElementById('asporto-list');
+  if(!el) return;
+  var aspOrders = orders.filter(function(o){ return String(o.table).startsWith('ASP-'); });
+  var activeAsps = [...new Set(aspOrders.map(function(o){ return o.table; }))];
+  // Also show selected if it's a new empty asporto
+  if(selectedTable && String(selectedTable).startsWith('ASP-') && !activeAsps.includes(selectedTable)) {
+    activeAsps.push(selectedTable);
+  }
+  if(!activeAsps.length) {
+    el.innerHTML = '<span class="asporto-empty">Nessun ordine asporto attivo</span>';
+    return;
+  }
+  el.innerHTML = activeAsps.map(function(aspId) {
+    var num = aspId.replace('ASP-','');
+    var hasOrd = aspOrders.some(function(o){ return o.table===aspId; });
+    var isSel = selectedTable === aspId;
+    return '<div class="asporto-chip'+(isSel?' active':'')+'" onclick="selectAsporto(\''+aspId+'\')">' +
+      '<div class="asp-dot"></div>' +
+      '🛍️ Asporto #'+num + (hasOrd ? '' : ' (vuoto)') +
+      '<span class="asp-close" onclick="event.stopPropagation();chiudiAsportoChip(\''+aspId+'\')"> ✕</span>' +
+    '</div>';
+  }).join('');
+}
+
+function chiudiAsportoChip(aspId) {
+  var aspOrd = orders.filter(function(o){ return o.table===aspId && o.status!=='annullato'; });
+  if(aspOrd.length) {
+    // Has active orders — open payment
+    if(selectedTable !== aspId) selectAsporto(aspId);
+    setTimeout(openPagaModal, 100);
+  } else {
+    // Empty — just deselect
+    if(selectedTable === aspId) { selectedTable=null; cart=[]; var cp=document.getElementById('cart-panel'); if(cp) cp.classList.remove('visible'); renderCart(); }
+    renderAsportoList();
+  }
+}
+
+// ============ SPLIT PAYMENT — FIXED ============
 var pagaMode = 'unico';
 var persone = [];
 var pagaOrders = [];
+var flatItemsList = []; // lista piatti espansa GLOBALE (indici safe)
 
 function openPagaModal() {
   var tOrd = selectedTable
     ? orders.filter(function(o){ return o.table===selectedTable && o.status!=='annullato'; })
     : [];
-  if (!tOrd.length) { showToast('⚠️ Nessun ordine attivo per questo tavolo'); return; }
+  if (!tOrd.length) { showToast('⚠️ Nessun ordine attivo'); return; }
   pagaOrders = tOrd;
   var label = getSpotLabel(tOrd[0].table);
   var totalAmount = calcTotalePagaOrders();
@@ -2049,14 +2157,19 @@ function openPagaModal() {
   document.getElementById('paga-totale-txt').textContent = '€ ' + totalAmount.toFixed(2).replace('.',',');
   document.getElementById('paga-coperti-txt').textContent = coperti ? coperti + ' pers.' : '—';
 
-  // Init persone: 2 di default o quanti sono i coperti
   var n = coperti > 0 ? coperti : 2;
   persone = [];
   for (var i=1; i<=n; i++) persone.push({ name: 'Persona '+i, items: [] });
 
+  // Aggiorna testo pulsante in base al tipo
+  var btnFinale = document.getElementById('btn-paga-finale');
+  var isAsp = selectedTable && String(selectedTable).startsWith('ASP-');
+  btnFinale.textContent = isAsp ? '🛍️ Chiudi ordine asporto' : '💳 Chiudi il conto e libera il tavolo';
+
   pagaMode = 'unico';
   document.querySelectorAll('.paga-mode-tab').forEach(function(t,idx){ t.classList.toggle('active', idx===0); });
 
+  buildFlatItems(); // costruisce flatItemsList
   renderPagaBody();
   document.getElementById('paga-modal').classList.add('open');
 }
@@ -2080,23 +2193,27 @@ function calcTotalePagaOrders() {
   }, 0);
 }
 
-// Costruisce lista piatti flat (espansa per quantità)
+// Costruisce flatItemsList con indici interi (NIENTE stringhe nell'uid)
 function buildFlatItems() {
-  var flat = [];
+  flatItemsList = [];
   pagaOrders.forEach(function(o) {
     (o.items||[]).forEach(function(item) {
-      for (var q=0; q<(item.qty||1); q++) {
-        flat.push({
-          uid: o.id + '-' + item.id + '-' + item.name + '-' + q,
-          emoji: item.emoji||'🍽️',
+      var qty = item.qty || 1;
+      for (var q = 0; q < qty; q++) {
+        flatItemsList.push({
+          uid: flatItemsList.length, // indice intero, sicuro in onclick
+          emoji: item.emoji || '🍽️',
           name: item.name,
-          price: item.price||0,
-          note: (item.removed&&item.removed.length ? '−'+item.removed.join(',') : '') + (item.extra&&item.extra.length ? ' +'+item.extra.join(',') : '')
+          price: item.price || 0,
+          note: [
+            item.removed && item.removed.length ? '− senza: ' + item.removed.join(', ') : '',
+            item.extra && item.extra.length ? '+ extra: ' + item.extra.join(', ') : ''
+          ].filter(Boolean).join(' | ')
         });
       }
     });
   });
-  return flat;
+  return flatItemsList;
 }
 
 function renderPagaBody() {
@@ -2104,31 +2221,42 @@ function renderPagaBody() {
   var totalAmount = calcTotalePagaOrders();
   var footerInfo = document.getElementById('paga-footer-info');
   var btnFinale = document.getElementById('btn-paga-finale');
+  var isAsp = selectedTable && String(selectedTable).startsWith('ASP-');
 
   if (pagaMode === 'unico') {
+    var rows = flatItemsList.map(function(it){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--sand-dark)">' +
+        '<span style="font-size:1.15rem">'+it.emoji+'</span>' +
+        '<div style="flex:1"><div style="font-size:0.88rem;font-weight:500">'+it.name+'</div>' +
+        (it.note ? '<div style="font-size:0.74rem;color:var(--text-muted);margin-top:2px">'+it.note+'</div>' : '') +
+        '</div>' +
+        '<span style="font-weight:700;color:var(--gold);white-space:nowrap">€ '+it.price.toFixed(2).replace('.',',')+'</span>' +
+        '</div>';
+    }).join('');
     body.innerHTML = '<div style="background:var(--sand);border-radius:14px;padding:14px 16px">' +
-      '<div style="font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Riepilogo ordine</div>' +
-      buildFlatItems().map(function(it){
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sand-dark)">' +
-          '<span style="font-size:1.1rem">'+it.emoji+'</span>' +
-          '<span style="flex:1;font-size:0.88rem;font-weight:500">'+it.name+(it.note?'<br><small style="color:var(--text-muted)">'+it.note+'</small>':'')+'</span>' +
-          '<span style="font-weight:700;color:var(--gold)">€ '+it.price.toFixed(2).replace('.',',')+'</span>' +
-          '</div>';
-      }).join('') +
+      '<div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">' +
+      'Riepilogo — '+flatItemsList.length+' piatti</div>' + rows +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:4px">' +
       '<span style="font-weight:700;font-size:0.85rem;color:var(--text-muted)">TOTALE</span>' +
       '<span style="font-family:\'Playfair Display\',serif;font-size:1.35rem;font-weight:700;color:var(--sea-deep)">€ '+totalAmount.toFixed(2).replace('.',',')+'</span>' +
       '</div></div>';
     footerInfo.textContent = '';
     btnFinale.disabled = false;
-    btnFinale.textContent = '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',');
+    btnFinale.textContent = (isAsp ? '🛍️ Chiudi asporto' : '💳 Chiudi conto') + ' — € '+totalAmount.toFixed(2).replace('.',',');
 
   } else if (pagaMode === 'dividi') {
     var n = persone.length;
     var quota = n > 0 ? totalAmount / n : 0;
+    var itemRows = flatItemsList.map(function(it){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e8d9b5">' +
+        '<span style="font-size:1rem">'+it.emoji+'</span>' +
+        '<div style="flex:1;font-size:0.83rem">'+it.name+(it.note?'<br><small style="color:var(--text-muted)">'+it.note+'</small>':'')+'</div>' +
+        '<span style="color:var(--text-muted);font-size:0.78rem">÷'+n+' =</span>' +
+        '<span style="font-weight:700;color:var(--gold);min-width:52px;text-align:right;font-size:0.83rem">€ '+(it.price/n).toFixed(2).replace('.',',')+'</span></div>';
+    }).join('');
     body.innerHTML =
       '<div class="dividi-row">' +
-        '<div><div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:6px">Numero persone</div>' +
+        '<div><div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:8px">Numero persone</div>' +
         '<div class="dividi-num-ctrl">' +
           '<button class="dividi-btn" onclick="changeDividiN(-1)">−</button>' +
           '<span class="dividi-num" id="dividi-n">'+n+'</span>' +
@@ -2140,16 +2268,12 @@ function renderPagaBody() {
         '</div>' +
       '</div>' +
       '<div style="background:var(--sand);border-radius:12px;padding:12px 14px">' +
-        buildFlatItems().map(function(it){
-          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #e8d9b5;font-size:0.83rem">' +
-            '<span>'+it.emoji+'</span><span style="flex:1">'+it.name+'</span>' +
-            '<span style="color:var(--text-muted)">÷'+n+' =</span>' +
-            '<span style="font-weight:700;color:var(--gold);min-width:52px;text-align:right">€ '+(it.price/n).toFixed(2).replace('.',',')+'</span></div>';
-        }).join('') +
+        '<div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase">Dettaglio piatti</div>' +
+        itemRows +
       '</div>';
     footerInfo.textContent = n + ' persone × € ' + quota.toFixed(2).replace('.',',');
     btnFinale.disabled = false;
-    btnFinale.textContent = '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',');
+    btnFinale.textContent = (isAsp ? '🛍️ Chiudi asporto' : '💳 Chiudi conto') + ' — € '+totalAmount.toFixed(2).replace('.',',');
 
   } else if (pagaMode === 'piatti') {
     renderPiattiMode();
@@ -2157,92 +2281,101 @@ function renderPagaBody() {
 }
 
 function changeDividiN(delta) {
-  var n = persone.length + delta;
-  if (n < 1) n = 1;
-  if (n > 20) n = 20;
+  var n = Math.max(1, Math.min(20, persone.length + delta));
   persone = [];
   for (var i=1; i<=n; i++) persone.push({ name: 'Persona '+i, items: [] });
-  var total = calcTotalePagaOrders();
-  var quota = total / n;
-  var el = document.getElementById('dividi-n');
-  var eq = document.getElementById('dividi-quota');
-  if (el) el.textContent = n;
-  if (eq) eq.textContent = '€ '+quota.toFixed(2).replace('.',',');
-  var footerInfo = document.getElementById('paga-footer-info');
-  if (footerInfo) footerInfo.textContent = n + ' persone × € '+quota.toFixed(2).replace('.',',');
-  // Re-render body to update per-item split
   renderPagaBody();
 }
 
 function renderPiattiMode() {
   var body = document.getElementById('paga-body');
-  var flat = buildFlatItems();
+  var totalAmount = calcTotalePagaOrders();
+  var isAsp = selectedTable && String(selectedTable).startsWith('ASP-');
+
+  // Mappa uid → indice persona assegnataria
   var assigned = {};
-  persone.forEach(function(p,pi) {
+  persone.forEach(function(p, pi) {
     (p.items||[]).forEach(function(uid){ assigned[uid] = pi; });
   });
 
   var totalAssigned = 0;
-  persone.forEach(function(p){ p.items.forEach(function(uid){ var it=flat.find(function(f){return f.uid===uid;}); if(it) totalAssigned+=it.price; }); });
-  var totalAmount = calcTotalePagaOrders();
+  persone.forEach(function(p){
+    (p.items||[]).forEach(function(uid){
+      var it = flatItemsList[uid];
+      if(it) totalAssigned += it.price;
+    });
+  });
   var totalResto = totalAmount - totalAssigned;
 
   var html = persone.map(function(p, pi) {
-    var subTot = (p.items||[]).reduce(function(s,uid){ var it=flat.find(function(f){return f.uid===uid;}); return s+(it?it.price:0); },0);
-    return '<div class="persona-block'+(p.items.length?' has-items':'')+'" id="persona-block-'+pi+'">' +
-      '<div class="persona-header">' +
-        '<div style="display:flex;align-items:center;gap:8px">' +
-          '<span style="font-size:1.1rem">👤</span>' +
-          '<input style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:white;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;font-weight:700;outline:none;width:100px" ' +
-          'value="'+p.name+'" onchange="persone['+pi+'].name=this.value">' +
-        '</div>' +
-        '<div class="persona-subtot">€ '+subTot.toFixed(2).replace('.',',')+'</div>' +
-      '</div>' +
-      '<div class="piatti-list">' +
-        flat.map(function(it) {
-          var isSel = (p.items||[]).includes(it.uid);
-          var isOther = !isSel && assigned[it.uid] !== undefined;
-          return '<div class="piatto-row'+(isSel?' selected':'')+(isOther?' assigned-other':'')+'" onclick="togglePiattoPersona('+pi+',\''+it.uid+'\')">' +
-            '<div class="piatto-check">'+(isSel?'✓':'')+'</div>' +
-            '<span class="piatto-emoji">'+it.emoji+'</span>' +
-            '<span class="piatto-nome">'+it.name+(it.note?'<br><small style="color:var(--text-muted)">'+it.note+'</small>':'')+'</span>' +
-            '<span class="piatto-prezzo">€ '+it.price.toFixed(2).replace('.',',')+'</span>' +
-          '</div>';
-        }).join('') +
-      '</div>' +
+    var subTot = (p.items||[]).reduce(function(s, uid){
+      var it = flatItemsList[uid]; return s + (it ? it.price : 0);
+    }, 0);
+
+    var righe = flatItemsList.map(function(it) {
+      var isSel = (p.items||[]).includes(it.uid);
+      var isOther = !isSel && assigned[it.uid] !== undefined;
+      var cls = 'piatto-row' + (isSel?' selected':'') + (isOther?' assigned-other':'');
+      // uid è un intero — safe da usare direttamente in onclick
+      return '<div class="'+cls+'" onclick="'+(isOther?'':'togglePiattoPersona('+pi+','+it.uid+')')+'">'+
+        '<div class="piatto-check">'+(isSel?'✓':'')+'</div>'+
+        '<span class="piatto-emoji">'+it.emoji+'</span>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="piatto-nome">'+it.name+'</div>'+
+          (it.note?'<div style="font-size:0.72rem;color:var(--text-muted)">'+it.note+'</div>':'')+
+        '</div>'+
+        (isOther?'<span style="font-size:0.68rem;color:var(--text-muted);padding:2px 7px;background:var(--sand-dark);border-radius:8px">'+persone[assigned[it.uid]].name+'</span>':'')+
+        '<span class="piatto-prezzo">€ '+it.price.toFixed(2).replace('.',',')+'</span>'+
+      '</div>';
+    }).join('');
+
+    return '<div class="persona-block'+(p.items.length?' has-items':'')+'">'+
+      '<div class="persona-header">'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span style="font-size:1.1rem">👤</span>'+
+          '<input style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);color:white;'+
+          'font-family:\'DM Sans\',sans-serif;font-size:0.9rem;font-weight:700;outline:none;width:110px" '+
+          'value="'+p.name+'" onchange="persone['+pi+'].name=this.value">'+
+        '</div>'+
+        '<div class="persona-subtot">€ '+subTot.toFixed(2).replace('.',',')+'</div>'+
+      '</div>'+
+      '<div class="piatti-list">'+righe+'</div>'+
     '</div>';
   }).join('');
 
-  // Resto non assegnato
   if (totalResto > 0.005) {
-    html += '<div class="resto-block">⚠️ Ancora <strong>€ '+totalResto.toFixed(2).replace('.',',')+'</strong> non assegnati</div>';
+    html += '<div class="resto-block">⚠️ Ancora <strong>€ '+totalResto.toFixed(2).replace('.',',')+'</strong> non assegnati a nessuno</div>';
+  } else if (flatItemsList.length > 0) {
+    html += '<div style="background:#f0faf4;border:2px solid #2e7d52;border-radius:12px;padding:10px 14px;font-size:0.82rem;color:#2e7d52;font-weight:600">✅ Tutti i piatti sono stati assegnati!</div>';
   }
-
   html += '<button class="aggiungi-persona-btn" onclick="addPersona()">＋ Aggiungi persona</button>';
 
   body.innerHTML = html;
 
   var btnFinale = document.getElementById('btn-paga-finale');
   var footerInfo = document.getElementById('paga-footer-info');
-  var allOk = totalResto <= 0.005;
+  var allOk = totalResto <= 0.005 && flatItemsList.length > 0;
   btnFinale.disabled = !allOk;
-  btnFinale.textContent = allOk ? '💳 Chiudi il conto — € '+totalAmount.toFixed(2).replace('.',',') : '⚠️ Assegna tutti i piatti per procedere';
-  if (footerInfo) footerInfo.textContent = persone.length + ' persone · assegnato € '+ totalAssigned.toFixed(2).replace('.',',');
+  btnFinale.textContent = allOk
+    ? (isAsp ? '🛍️ Chiudi asporto' : '💳 Chiudi conto') + ' — € '+totalAmount.toFixed(2).replace('.',',')
+    : '⚠️ Assegna tutti i piatti per procedere';
+  if(footerInfo) footerInfo.textContent = persone.length+' persone · assegnato € '+totalAssigned.toFixed(2).replace('.',',');
 }
 
 function togglePiattoPersona(pi, uid) {
-  var flat = buildFlatItems();
-  var it = flat.find(function(f){ return f.uid===uid; });
-  if (!it) return;
-  // Già assegnato a un'altra persona?
-  var otherIdx = -1;
-  persone.forEach(function(p,i){ if(i!==pi && (p.items||[]).includes(uid)) otherIdx=i; });
-  if (otherIdx !== -1) return; // blocca
-
+  // uid è un intero (indice in flatItemsList)
+  uid = parseInt(uid);
   var p = persone[pi];
-  var idx = (p.items||[]).indexOf(uid);
-  if (idx !== -1) p.items.splice(idx,1);
-  else { if(!p.items) p.items=[]; p.items.push(uid); }
+  if (!p) return;
+  if (!p.items) p.items = [];
+  var idx = p.items.indexOf(uid);
+  if (idx !== -1) {
+    p.items.splice(idx, 1); // deseleziona
+  } else {
+    // Rimuovi da altri se già assegnato
+    persone.forEach(function(op, oi){ if(oi!==pi){ var i=op.items.indexOf(uid); if(i!==-1) op.items.splice(i,1); } });
+    p.items.push(uid);
+  }
   renderPiattiMode();
 }
 
@@ -2255,17 +2388,18 @@ function eseguiPagamento() {
   if (!pagaOrders.length) return;
   var label = getSpotLabel(pagaOrders[0].table);
   var sessionId = pagaOrders[0].sessionId || pagaOrders[0].id;
+  var isAsp = String(pagaOrders[0].table).startsWith('ASP-');
   orders.forEach(function(o){ if((o.sessionId||o.id)==sessionId) o.status='done'; });
   history.forEach(function(o){ if((o.sessionId||o.id)==sessionId&&o.status!=='annullato') o.status='completato'; });
   orders = orders.filter(function(o){ return (o.sessionId||o.id)!=sessionId; });
   sendToSheets(label, pagaOrders, coperti);
   save();
-  showToast('💳 '+label+' — Conto chiuso!');
+  showToast(isAsp ? '🛍️ '+label+' — Asporto chiuso!' : '💳 '+label+' — Conto chiuso!');
   closePagaModal();
-  closeCart();
+  if (!isAsp) closeCart();
+  else { selectedTable=null; cart=[]; var cp=document.getElementById('cart-panel'); if(cp) cp.classList.remove('visible'); renderCart(); renderAsportoList(); }
   renderTableGrid(); renderKitchen(); updateKitchenBadge();
 }
-
 // ============ CALCOLATRICE ============
 var calcVal = '0';
 var calcExpr = '';

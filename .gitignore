@@ -1,0 +1,15 @@
+# Backup locali
+index.html.backup-*
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

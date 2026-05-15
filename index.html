@@ -914,7 +914,8 @@
           if (window._fbWriting) return;
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
           if (data.orders) { orders = data.orders; save(false); renderAll(); }
-          if (data.history) { history = data.history; save(false); }
+          // NB: data.history NON è più letto. La history è locale per dispositivo
+          // (l'archivio completo degli ordini chiusi è su Google Sheets).
         });
       }
     }, 1500);
@@ -1584,6 +1585,28 @@ let menu = JSON.parse(localStorage.getItem('mmt_menu')||'null') || [
 ];
 let orders = JSON.parse(localStorage.getItem('mmt_orders')||'[]');
 let history = JSON.parse(localStorage.getItem('mmt_history')||'[]');
+// Pulizia preventiva al caricamento: se la history pregressa è già oltre soglia,
+// la riduciamo prima ancora del primo save (evita QuotaExceeded all'avvio).
+try {
+  var _PURGE_DAYS = 7;
+  var _PURGE_MAX = 500;
+  var _cutoff = Date.now() - (_PURGE_DAYS * 24 * 60 * 60 * 1000);
+  if (Array.isArray(history) && history.length) {
+    history = history.filter(function(o){
+      var t = typeof o.time === 'number' ? o.time : new Date(o.time).getTime();
+      return !isNaN(t) && t > _cutoff;
+    });
+    if (history.length > _PURGE_MAX) {
+      history.sort(function(a,b){
+        var ta = typeof a.time === 'number' ? a.time : new Date(a.time).getTime();
+        var tb = typeof b.time === 'number' ? b.time : new Date(b.time).getTime();
+        return tb - ta;
+      });
+      history = history.slice(0, _PURGE_MAX);
+    }
+    try { localStorage.setItem('mmt_history', JSON.stringify(history)); } catch(_e) {}
+  }
+} catch(_e) { /* noop */ }
 let cart = [];
 let selectedTable = null;
 let coperti = 0;
@@ -1637,13 +1660,63 @@ function getSpotLabel(id) {
   return spot.label;
 }
 
+// ============ HISTORY PURGE & SAFE STORAGE (stagione lunga) ============
+// History viene purgata automaticamente per evitare:
+// 1. QuotaExceededError di localStorage (limite ~5 MB su Safari iOS)
+// 2. Esaurimento bandwidth Firebase (history NON è più sincronizzata su FB)
+// I dati storici completi restano comunque su Google Sheets (sendToSheets).
+var MAX_HISTORY_DAYS = 7;
+var MAX_HISTORY_ITEMS = 500;
+
+function _orderTime(o) {
+  var t = typeof o.time === 'number' ? o.time : new Date(o.time).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
+function purgeOldHistory() {
+  if (!history || !history.length) return;
+  var cutoff = Date.now() - (MAX_HISTORY_DAYS * 24 * 60 * 60 * 1000);
+  history = history.filter(function(o) { return _orderTime(o) > cutoff; });
+  if (history.length > MAX_HISTORY_ITEMS) {
+    history.sort(function(a,b){ return _orderTime(b) - _orderTime(a); });
+    history = history.slice(0, MAX_HISTORY_ITEMS);
+  }
+}
+
+function _writeLocal() {
+  localStorage.setItem('mmt_menu', JSON.stringify(menu));
+  localStorage.setItem('mmt_orders', JSON.stringify(orders));
+  localStorage.setItem('mmt_history', JSON.stringify(history));
+}
+
+function safeLocalSave() {
+  try { _writeLocal(); return true; }
+  catch (e) {
+    console.warn('localStorage quota raggiunta, riduco history:', e);
+    // Tentativo 1: taglia history a 100 record più recenti
+    if (history && history.length > 100) {
+      history.sort(function(a,b){ return _orderTime(b) - _orderTime(a); });
+      history = history.slice(0, 100);
+    }
+    try { _writeLocal(); if (typeof showToast === 'function') showToast('⚠️ Storage pieno: storico ridotto agli ultimi 100 ordini'); return false; }
+    catch (e2) {
+      // Tentativo 2: azzera history
+      console.error('Storage ancora pieno, azzero history:', e2);
+      history = [];
+      try { _writeLocal(); if (typeof showToast === 'function') showToast('⚠️ Storage critico: storico azzerato'); return false; }
+      catch (e3) { console.error('Storage non scrivibile:', e3); return false; }
+    }
+  }
+}
+
 function save(syncToFb=true) {
-  localStorage.setItem('mmt_menu',JSON.stringify(menu));
-  localStorage.setItem('mmt_orders',JSON.stringify(orders));
-  localStorage.setItem('mmt_history',JSON.stringify(history));
+  purgeOldHistory();
+  safeLocalSave();
   if(syncToFb && typeof window.fbSave==='function') {
     window._fbWriting=true;
-    window.fbSave({menu,orders,history});
+    // NB: history NON è più sincronizzata su Firebase per evitare bandwidth bloat.
+    // Ogni dispositivo mantiene la propria history locale; l'archivio completo è su Google Sheets.
+    window.fbSave({menu,orders});
     setTimeout(()=>{window._fbWriting=false;},2000);
   }
 }
@@ -1665,7 +1738,7 @@ function renderAll() {
 function renderTableGrid() {
   var container = document.getElementById('map-canvas');
   var typeColors = {interno:'#1A6B7C',pedana:'#C9954A',spiaggia:'#2E7D52',bancone:'#7c3aab',divano:'#b05050'};
-  var svg = ['<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;font-family:Georgia,serif">'];
+  var svg = ['<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;height:auto;font-family:Georgia,serif">'];
 
   svg.push('<defs><filter id="sh" x="-8%" y="-8%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,60,80,0.18)"/></filter></defs>');
   svg.push('<rect x="0" y="0" width="'+SVG_W+'" height="'+SVG_H+'" rx="16" fill="#daf0f5"/>');
@@ -2767,7 +2840,7 @@ async function sendAI() {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5',
         max_tokens: 600,
         system: AI_SYSTEM_PROMPT,
         messages: aiMessages.slice(-10)

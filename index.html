@@ -983,6 +983,382 @@
   :root:not([data-theme]) input::placeholder,
   :root:not([data-theme]) textarea::placeholder { color: #6b7280; }
 
+  /* ============================================================
+     AUDIT 15/05/2026: 32 regole con color scuro su bg scuro identificate.
+     Override sistematici per ogni selettore problematico.
+     ============================================================ */
+
+  /* COPERTI (numero persone al tavolo) — segnalati dal cliente come illeggibili */
+  :root[data-theme="dark"] .coperti-val,
+  :root:not([data-theme]) .coperti-val { color: #ffffff !important; }
+  :root[data-theme="dark"] .coperti-btn,
+  :root:not([data-theme]) .coperti-btn {
+    background: rgba(255,255,255,0.15) !important;
+    color: #ffffff !important;
+    border: 1.5px solid rgba(255,255,255,0.35) !important;
+  }
+  :root[data-theme="dark"] .coperti-btn:hover,
+  :root:not([data-theme]) .coperti-btn:hover {
+    background: #ffffff !important;
+    color: #ff7a3d !important;
+  }
+
+  /* CART TABLE LABEL (numero tavolo in header carrello, stesso contesto) */
+  :root[data-theme="dark"] .cart-table-label,
+  :root:not([data-theme]) .cart-table-label { color: #ffffff !important; }
+
+  /* PAGA / DIVIDI CONTO (coperti del cliente) */
+  :root[data-theme="dark"] .paga-header h3,
+  :root:not([data-theme]) .paga-header h3 { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .dividi-num,
+  :root:not([data-theme]) .dividi-num { color: #ff7a3d !important; }
+  :root[data-theme="dark"] .dividi-quota,
+  :root:not([data-theme]) .dividi-quota { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .split-item-row.assigned,
+  :root:not([data-theme]) .split-item-row.assigned { color: #f0f2f5 !important; opacity: 0.55; }
+  :root[data-theme="dark"] .split-summary-tot,
+  :root:not([data-theme]) .split-summary-tot { color: #ff7a3d !important; }
+  :root[data-theme="dark"] .persona-block.has-items,
+  :root:not([data-theme]) .persona-block.has-items { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .piatto-row:hover,
+  :root:not([data-theme]) .piatto-row:hover { color: #f0f2f5 !important; background: #2a3343 !important; }
+  :root[data-theme="dark"] .piatto-row.selected,
+  :root:not([data-theme]) .piatto-row.selected { color: #ff7a3d !important; background: rgba(255,122,61,0.12) !important; }
+  :root[data-theme="dark"] .paga-mode-tab:hover:not(.active),
+  :root:not([data-theme]) .paga-mode-tab:hover:not(.active) { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .paga-close,
+  :root:not([data-theme]) .paga-close { color: #f0f2f5 !important; }
+
+  /* CALCOLATRICE */
+  :root[data-theme="dark"] .calc-btn.op,
+  :root:not([data-theme]) .calc-btn.op { color: #ff7a3d !important; background: #1f2530 !important; }
+  :root[data-theme="dark"] .calc-toggle-btn,
+  :root:not([data-theme]) .calc-toggle-btn { color: #f0f2f5 !important; }
+
+  /* SYNC MODAL */
+  :root[data-theme="dark"] .sync-modal-inner h3,
+  :root:not([data-theme]) .sync-modal-inner h3 { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .sync-step strong,
+  :root:not([data-theme]) .sync-step strong { color: #ff7a3d !important; }
+  :root[data-theme="dark"] .sync-input-group input:focus,
+  :root:not([data-theme]) .sync-input-group input:focus { border-color: #ff7a3d !important; color: #f0f2f5 !important; }
+
+  /* SECTION TITLES (titoli di pannelli — "Mappa Bagno Capri" ecc) */
+  :root[data-theme="dark"] .section-title,
+  :root:not([data-theme]) .section-title { color: #f0f2f5 !important; }
+
+  /* CART / ORDINI */
+  :root[data-theme="dark"] .cart-total-price,
+  :root:not([data-theme]) .cart-total-price { color: #ff7a3d !important; }
+  :root[data-theme="dark"] .order-table,
+  :root:not([data-theme]) .order-table { color: #ff7a3d !important; }
+  :root[data-theme="dark"] .order-ing-title,
+  :root:not([data-theme]) .order-ing-title { color: #f0f2f5 !important; }
+
+  /* MENU */
+  :root[data-theme="dark"] .menu-item:hover,
+  :root:not([data-theme]) .menu-item:hover { color: #f0f2f5 !important; background: #2a3343 !important; }
+  :root[data-theme="dark"] .cat-tab:hover:not(.active),
+  :root:not([data-theme]) .cat-tab:hover:not(.active) { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .ing-tag,
+  :root:not([data-theme]) .ing-tag { color: #f0f2f5 !important; background: #1f2530 !important; border: 1px solid #2f3947; }
+  :root[data-theme="dark"] .ing-tags:focus-within,
+  :root:not([data-theme]) .ing-tags:focus-within { border-color: #ff7a3d !important; }
+  :root[data-theme="dark"] .ing-input:focus,
+  :root:not([data-theme]) .ing-input:focus { color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .btn-edit-item:hover,
+  :root:not([data-theme]) .btn-edit-item:hover { color: #f0f2f5 !important; background: #2a3343 !important; }
+
+  /* AI ASSISTANT */
+  :root[data-theme="dark"] .ai-chip,
+  :root:not([data-theme]) .ai-chip { color: #f0f2f5 !important; background: #1f2530 !important; border: 1px solid #2f3947; }
+  :root[data-theme="dark"] .ai-chip:hover,
+  :root:not([data-theme]) .ai-chip:hover { background: #ff7a3d !important; color: #0e1218 !important; }
+  :root[data-theme="dark"] #ai-input:focus,
+  :root:not([data-theme]) #ai-input:focus { border-color: #ff7a3d !important; color: #f0f2f5 !important; }
+  :root[data-theme="dark"] .ai-msg.bot .ai-bubble,
+  :root:not([data-theme]) .ai-msg.bot .ai-bubble { color: #f0f2f5 !important; }
+
+  /* QUANTITY BUTTON */
+  :root[data-theme="dark"] .qty-btn,
+  :root:not([data-theme]) .qty-btn { color: #ff7a3d !important; background: #1f2530 !important; border: 1px solid #2f3947; }
+
+  /* ORDER NOTES & TIME BADGES */
+  :root[data-theme="dark"] .order-note,
+  :root:not([data-theme]) .order-note { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; border: 1px solid rgba(212,133,10,0.3); }
+  :root[data-theme="dark"] .order-time-badge,
+  :root:not([data-theme]) .order-time-badge { color: #8a92a0 !important; background: #1f2530 !important; }
+  :root[data-theme="dark"] .order-time-badge.fresh,
+  :root:not([data-theme]) .order-time-badge.fresh { color: #2ee07e !important; background: rgba(46,224,126,0.15) !important; }
+  :root[data-theme="dark"] .order-time-badge.medium,
+  :root:not([data-theme]) .order-time-badge.medium { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; }
+  :root[data-theme="dark"] .order-time-badge.late,
+  :root:not([data-theme]) .order-time-badge.late { color: #ff5b3d !important; background: rgba(255,91,61,0.15) !important; }
+
+  /* KITCHEN MODIFICATIONS (extras/remove) */
+  :root[data-theme="dark"] .kitchen-mod-rm,
+  :root:not([data-theme]) .kitchen-mod-rm { color: #ff8a70 !important; background: rgba(255,91,61,0.15) !important; }
+  :root[data-theme="dark"] .kitchen-mod-ex,
+  :root:not([data-theme]) .kitchen-mod-ex { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; }
+
+  /* ORDER INGREDIENT TAGS */
+  :root[data-theme="dark"] .order-ing-tag.active,
+  :root:not([data-theme]) .order-ing-tag.active { color: #2ee07e !important; background: rgba(46,224,126,0.15) !important; border: 1px solid #2ee07e; }
+  :root[data-theme="dark"] .order-ing-tag.removed,
+  :root:not([data-theme]) .order-ing-tag.removed { color: #ff8a70 !important; background: rgba(255,91,61,0.15) !important; border: 1px solid #ff5b3d; }
+  :root[data-theme="dark"] .order-ing-tag.extra,
+  :root:not([data-theme]) .order-ing-tag.extra { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; border: 1px solid #D4850A; }
+  :root[data-theme="dark"] .order-ing-close,
+  :root:not([data-theme]) .order-ing-close { color: #8a92a0 !important; background: #2f3947 !important; }
+  :root[data-theme="dark"] .order-ing-input:focus,
+  :root:not([data-theme]) .order-ing-input:focus { color: #f0f2f5 !important; }
+
+  /* MERGE BAR */
+  :root[data-theme="dark"] .merge-bar,
+  :root:not([data-theme]) .merge-bar { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; border: 1px solid rgba(212,133,10,0.3); }
+
+  /* ASPORTO */
+  :root[data-theme="dark"] .asporto-chip,
+  :root:not([data-theme]) .asporto-chip { color: #f0f2f5 !important; }
+
+  /* CANCEL/DELETE BUTTONS */
+  :root[data-theme="dark"] .btn-cancel-order,
+  :root:not([data-theme]) .btn-cancel-order { color: #8a92a0 !important; background: #1f2530 !important; }
+  :root[data-theme="dark"] .btn-cancel-order:hover,
+  :root:not([data-theme]) .btn-cancel-order:hover { color: #ff5b3d !important; background: rgba(255,91,61,0.15) !important; }
+  :root[data-theme="dark"] .btn-del-item,
+  :root:not([data-theme]) .btn-del-item { color: #8a92a0 !important; background: #1f2530 !important; }
+  :root[data-theme="dark"] .btn-del-item:hover,
+  :root:not([data-theme]) .btn-del-item:hover { color: #ff5b3d !important; background: rgba(255,91,61,0.15) !important; }
+
+  /* PAGA FINALE DISABLED */
+  :root[data-theme="dark"] .btn-paga-finale:disabled,
+  :root:not([data-theme]) .btn-paga-finale:disabled { color: #6b7280 !important; background: #2f3947 !important; }
+
+  /* FILTER BUTTONS */
+  :root[data-theme="dark"] .filter-btn,
+  :root:not([data-theme]) .filter-btn { color: #8a92a0 !important; background: #161b24 !important; border: 1px solid #2f3947; }
+  :root[data-theme="dark"] .filter-btn.active,
+  :root:not([data-theme]) .filter-btn.active { color: #0e1218 !important; background: #ff7a3d !important; border-color: #ff7a3d; }
+
+  /* RESTO BLOCK */
+  :root[data-theme="dark"] .resto-block,
+  :root:not([data-theme]) .resto-block { color: #ffb84a !important; background: rgba(212,133,10,0.15) !important; border: 1px solid rgba(212,133,10,0.3); }
+
+  /* BTN MODAL CANCEL */
+  :root[data-theme="dark"] .btn-modal-cancel,
+  :root:not([data-theme]) .btn-modal-cancel { color: #f0f2f5 !important; background: #1f2530 !important; border: 1px solid #2f3947; }
+
+  /* THEME TOGGLE color fix nel dark */
+  :root[data-theme="dark"] .theme-toggle,
+  :root:not([data-theme]) .theme-toggle { color: #f0f2f5 !important; }
+
+  /* QUALSIASI label form, paragrafo, lista che eredita color scuro */
+  :root[data-theme="dark"] label,
+  :root[data-theme="dark"] p,
+  :root[data-theme="dark"] li,
+  :root[data-theme="dark"] td,
+  :root[data-theme="dark"] th,
+  :root[data-theme="dark"] .modal label,
+  :root[data-theme="dark"] .modal p,
+  :root[data-theme="dark"] .modal li,
+  :root:not([data-theme]) label,
+  :root:not([data-theme]) p,
+  :root:not([data-theme]) li,
+  :root:not([data-theme]) td,
+  :root:not([data-theme]) th { color: #f0f2f5; }
+
+  /* Strong/b nei modali */
+  :root[data-theme="dark"] strong,
+  :root[data-theme="dark"] b,
+  :root:not([data-theme]) strong,
+  :root:not([data-theme]) b { color: #ff7a3d; }
+
+  /* Small / .muted */
+  :root[data-theme="dark"] small,
+  :root[data-theme="dark"] .muted,
+  :root:not([data-theme]) small,
+  :root:not([data-theme]) .muted { color: #8a92a0; }
+
+  /* ============================================================
+     OVERRIDE TEMA LIGHT — segnalato dal cliente al 15/05/2026
+     L'header originale era scuro: TUTTI gli elementi al suo interno
+     usano color: white o rgba(255,255,255,...) hardcoded.
+     In light l'header è bianco → tutto invisibile.
+     Qui ridipingo solo gli elementi dell'header e i pochi altri con
+     lo stesso pattern.
+     ============================================================ */
+
+  /* HEADER + LOGO */
+  :root[data-theme="light"] header {
+    background: #ffffff !important;
+    color: #1a1d22 !important;
+    border-bottom: 1px solid #e4e2db;
+  }
+  :root[data-theme="light"] .logo,
+  :root[data-theme="light"] .brand {
+    color: #1a1d22 !important;
+  }
+  :root[data-theme="light"] .logo span,
+  :root[data-theme="light"] .brand .accent {
+    color: #d85a20 !important;
+  }
+
+  /* SYNC + SHEETS STATUS PILLS */
+  :root[data-theme="light"] .sync-status,
+  :root[data-theme="light"] .sheets-status,
+  :root[data-theme="light"] .head-pill {
+    background: #f4f1ea !important;
+    color: #1a1d22 !important;
+    border: 1px solid #e4e2db !important;
+  }
+  :root[data-theme="light"] .sync-status:hover,
+  :root[data-theme="light"] .sheets-status:hover,
+  :root[data-theme="light"] .head-pill:hover {
+    background: #e8e3d6 !important;
+  }
+
+  /* CHANGE PIN + LOGOUT BUTTONS */
+  :root[data-theme="light"] .change-pin-btn,
+  :root[data-theme="light"] .logout-btn {
+    background: #f4f1ea !important;
+    color: #1a1d22 !important;
+    border: 1px solid #e4e2db !important;
+  }
+  :root[data-theme="light"] .change-pin-btn:hover {
+    background: #e8e3d6 !important;
+    color: #1a1d22 !important;
+  }
+  :root[data-theme="light"] .logout-btn:hover {
+    background: rgba(216,90,32,0.15) !important;
+    color: #d85a20 !important;
+    border-color: #d85a20 !important;
+  }
+
+  /* THEME TOGGLE */
+  :root[data-theme="light"] .theme-toggle {
+    background: #f4f1ea !important;
+    color: #1a1d22 !important;
+    border: 1px solid #e4e2db !important;
+  }
+  :root[data-theme="light"] .theme-toggle:hover {
+    background: #e8e3d6 !important;
+  }
+
+  /* NAV TABS */
+  :root[data-theme="light"] .nav-tabs {
+    background: #fafaf8 !important;
+    border-top: 1px solid #e4e2db;
+  }
+  :root[data-theme="light"] .nav-tab {
+    color: #5f6670 !important;
+    background: transparent !important;
+  }
+  :root[data-theme="light"] .nav-tab:hover:not(.active) {
+    color: #1a1d22 !important;
+    background: rgba(0,0,0,0.04) !important;
+  }
+  :root[data-theme="light"] .nav-tab.active {
+    background: #d85a20 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(216,90,32,0.25);
+  }
+
+  /* CART HEADER (era arancio scuro, in light può essere arancio chiaro) */
+  :root[data-theme="light"] .cart-header {
+    background: linear-gradient(90deg, #d85a20, #f07a40) !important;
+    color: #ffffff !important;
+  }
+
+  /* COPERTI (override colore bianco è OK su arancio, ma serve check) */
+  :root[data-theme="light"] .coperti-val { color: #ffffff !important; }
+  :root[data-theme="light"] .coperti-btn {
+    background: rgba(255,255,255,0.2) !important;
+    color: #ffffff !important;
+    border: 1.5px solid rgba(255,255,255,0.4) !important;
+  }
+  :root[data-theme="light"] .coperti-btn:hover {
+    background: #ffffff !important;
+    color: #d85a20 !important;
+  }
+  :root[data-theme="light"] .cart-table-label {
+    background: rgba(255,255,255,0.25) !important;
+    color: #ffffff !important;
+  }
+
+  /* AI FAB + AI HEADER (in light arancio resta arancio, ma testo deve essere bianco) */
+  :root[data-theme="light"] #ai-fab {
+    background: #d85a20 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 24px rgba(216,90,32,0.4);
+  }
+  :root[data-theme="light"] #ai-fab.open {
+    background: #15a85e !important;
+  }
+  :root[data-theme="light"] #ai-header {
+    background: #d85a20 !important;
+    color: #ffffff !important;
+  }
+  :root[data-theme="light"] #ai-header-close {
+    background: rgba(255,255,255,0.2) !important;
+    color: #ffffff !important;
+  }
+
+  /* LOGIN BOX in tema light */
+  :root[data-theme="light"] .login-box {
+    background: #ffffff !important;
+    border: 1px solid #e4e2db !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.1) !important;
+  }
+  :root[data-theme="light"] .login-logo {
+    color: #1a1d22 !important;
+  }
+  :root[data-theme="light"] .login-logo span {
+    color: #d85a20 !important;
+  }
+  :root[data-theme="light"] .login-subtitle {
+    color: #5f6670 !important;
+  }
+  :root[data-theme="light"] .pin-key {
+    background: #ffffff !important;
+    color: #1a1d22 !important;
+    border: 1px solid #e4e2db !important;
+  }
+  :root[data-theme="light"] .pin-key:hover {
+    background: #d85a20 !important;
+    color: #ffffff !important;
+    border-color: #d85a20 !important;
+  }
+  :root[data-theme="light"] .pin-key.del {
+    background: transparent !important;
+    color: #c83020 !important;
+    border-color: #e4e2db !important;
+  }
+  :root[data-theme="light"] .pin-key.del:hover {
+    background: #c83020 !important;
+    color: #ffffff !important;
+    border-color: #c83020 !important;
+  }
+  :root[data-theme="light"] .pin-dot {
+    border-color: #d0ccc2 !important;
+  }
+  :root[data-theme="light"] .pin-dot.filled {
+    background: #d85a20 !important;
+    border-color: #d85a20 !important;
+  }
+  :root[data-theme="light"] .pin-error { color: #c83020 !important; }
+
+  /* PANNELLI generali in light: bg bianco, testo nero — niente da fare,
+     funziona già con var(--text). Ma cart-panel ha forse problemi se
+     era pensato chiaro su scuro */
+
+  /* TIMER BADGE in light: usa colori semantici naturali */
+  /* .order-time-badge.* hanno già background chiaro, color teal/danger
+     leggibile in light, no override necessario */
+
+  /* MAPPA TAVOLI in light: la palette tema-aware è già gestita da JS
+     in renderTableGrid (P.canvasBg etc), non serve CSS */
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <script type="module">

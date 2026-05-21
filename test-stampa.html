@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test stampa RawBT — Bagno Capri</title>
+<style>
+  body{font-family:-apple-system,system-ui,sans-serif;background:#111;color:#eee;
+       margin:0;display:flex;flex-direction:column;align-items:center;
+       justify-content:center;min-height:100vh;gap:24px;padding:24px;text-align:center}
+  h1{font-size:18px;font-weight:600;margin:0}
+  p{color:#aaa;font-size:14px;line-height:1.5;max-width:340px;margin:0}
+  button{background:#ff5a00;color:#fff;border:0;border-radius:14px;
+         padding:22px 36px;font-size:20px;font-weight:700;cursor:pointer;
+         width:100%;max-width:340px}
+  button:active{opacity:.8}
+  #log{font-family:monospace;font-size:12px;color:#888;
+       white-space:pre-wrap;word-break:break-all;max-width:340px}
+</style>
+</head>
+<body>
+  <h1>Test stampa RawBT</h1>
+  <p>Apri questa pagina sull'Android col bridge RawBT e premi il bottone.
+     Devono uscire 4 righe e la carta deve tagliarsi.</p>
+  <button id="btn">STAMPA TEST</button>
+  <div id="log"></div>
+
+<script>
+// --- Codifica Windows-1252 (la stampante vuole byte singoli, non UTF-8) ---
+function cp1252(str){
+  const out = [];
+  for (const ch of str){
+    const c = ch.codePointAt(0);
+    if (c === 0x20AC) out.push(0x80);        // €
+    else if (c <= 0xFF) out.push(c);          // ASCII + Latin-1 (à è ì ò ù é ...)
+    else out.push(0x3F);                      // '?' per caratteri non gestiti
+  }
+  return out;
+}
+
+function buildTicket(){
+  const ESC = 0x1B, GS = 0x1D;
+  let b = [];
+  b.push(ESC, 0x40);                          // ESC @  inizializza
+  b = b.concat(cp1252("BAGNO CAPRI\n"));
+  b = b.concat(cp1252("browser -> RawBT OK\n"));
+  b = b.concat(cp1252("Accenti: a' e' i' o' u'  ->  à è ì ò ù é\n"));
+  b = b.concat(cp1252("Prezzo: 12,50 €\n"));
+  b = b.concat(cp1252("\n\n"));
+  b.push(GS, 0x56, 0x41, 0x00);               // GS V 65 0  taglio pieno (funzione B)
+  return b;
+}
+
+function toBase64(bytes){
+  let bin = "";
+  for (const x of bytes) bin += String.fromCharCode(x);
+  return btoa(bin);
+}
+
+document.getElementById('btn').addEventListener('click', function(){
+  const bytes = buildTicket();
+  const b64 = toBase64(bytes);
+  document.getElementById('log').textContent =
+     bytes.length + " byte inviati a RawBT…";
+  window.location.href = "rawbt:base64," + b64;
+});
+</script>
+</body>
+</html>

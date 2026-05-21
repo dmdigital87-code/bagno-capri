@@ -1412,7 +1412,7 @@
         window.fbListen((data) => {
           if (window._fbWriting) return;
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
-          if (data.orders) { orders = data.orders; save(false); renderAll(); }
+          if (data.orders) { orders = data.orders; if (window.RBPrint) RBPrint.onOrders(data.orders); save(false); renderAll(); }
           // NB: data.history NON è più letto. La history è locale per dispositivo
           // (l'archivio completo degli ordini chiusi è su Google Sheets).
         });
@@ -3403,4 +3403,5 @@ async function sendAI() {
   document.getElementById('ai-input').focus();
 }
 </script>
+<script src="bagno-print.js"></script>
 </body>

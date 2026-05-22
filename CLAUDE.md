@@ -53,7 +53,7 @@ L'aggancio `RBPrint.onOrders` nel listener Firebase (riga ~1415) è stato **rimo
 - **Listener Firebase**: riga ~1415 ripristinata senza chiamate RBPrint
 
 ### Logica scontrini
-- **2 scontrini per ordine**: CUCINA + BAR
+- **3 scontrini per ordine**: 2× CUCINA + 1× BAR (commit `4189bfd`)
 - **Divisione per categoria**: solo `"Bevande"` va al BAR, tutto il resto va in CUCINA
 - La costante `BAR_CATS` in cima a `bagno-print.js` controlla l'assegnazione
 - Gli scontrini vuoti vengono saltati

@@ -54,11 +54,16 @@
     if(order.note&&String(order.note).trim()){push(BOLD_ON);push(txt('NOTE: '+order.note));push(nl());push(BOLD_OFF);push(txt(LINE));push(nl());}
     push(nl(4));push(CUT);return b;
   }
+  // Quante copie del ticket CUCINA stampare (BAR resta sempre 1).
+  var CUCINA_COPIE = 2;
   function buildOrder(order){
     var items=order.items||[],bar=[],cuc=[];
     for(var i=0;i<items.length;i++)(BAR_CATS.indexOf(items[i].cat)>=0?bar:cuc).push(items[i]);
     var out=[];
-    if(cuc.length)out=out.concat(buildTicket(order,'CUCINA',cuc));
+    if(cuc.length){
+      var t=buildTicket(order,'CUCINA',cuc);
+      for(var k=0;k<CUCINA_COPIE;k++) out=out.concat(t);   // due copie identiche
+    }
     if(bar.length)out=out.concat(buildTicket(order,'BAR',bar));
     return out;
   }

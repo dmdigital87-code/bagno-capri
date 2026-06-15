@@ -1424,6 +1424,7 @@
         window.fbListen((data) => {
           if (window._fbWriting) return;
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
+          if (data.categories) { categories = data.categories; localStorage.setItem('mmt_categories', JSON.stringify(categories)); }
           if (data.orders) { orders = data.orders; save(false); renderAll(); }
           if (data.settings) { localStorage.setItem('bc_settings', JSON.stringify(data.settings)); applyKitchenNotesVisibility(); }
           // NB: data.history NON è più letto. La history è locale per dispositivo
@@ -1670,10 +1671,7 @@
     <div class="form-group"><label>Emoji</label><input type="text" id="new-item-emoji" placeholder="🍕"></div>
     <div class="form-group">
       <label>Categoria</label>
-      <select id="new-item-cat">
-        <option>Panini</option><option>Primi</option><option>Insalatone</option>
-        <option>Piatti Freddi</option><option>Piatti Caldi</option><option>Contorni</option><option>Bevande</option>
-      </select>
+      <select id="new-item-cat"></select>
     </div>
     <div class="ing-section">
       <label>Ingredienti</label>
@@ -2094,6 +2092,9 @@ function saveChangePin() {
 const _MENU_VERSION_CHECK = '6';
 if(localStorage.getItem('mmt_menu_version')!==_MENU_VERSION_CHECK){localStorage.removeItem('mmt_menu');localStorage.setItem('mmt_menu_version',_MENU_VERSION_CHECK);}
 
+let categories = JSON.parse(localStorage.getItem('mmt_categories')||'null')
+  || ['Panini','Primi','Insalatone','Piatti Freddi','Piatti Caldi','Contorni','Bevande'];
+
 let menu = JSON.parse(localStorage.getItem('mmt_menu')||'null') || [
   {id:1,name:'Classico*',price:8,cat:'Panini',emoji:'🍔',active:true,ingredients:["Pane Bianco","Carne","Insalata","Pomodoro","Ketchup","Maionese"]},
   {id:2,name:'Cheeseburger*',price:9,cat:'Panini',emoji:'🧀',active:true,ingredients:["Pane Bianco","Carne","Cheddar","Insalata","Pomodoro","Ketchup","Maionese"]},
@@ -2288,6 +2289,7 @@ function purgeOldHistory() {
 
 function _writeLocal() {
   localStorage.setItem('mmt_menu', JSON.stringify(menu));
+  localStorage.setItem('mmt_categories', JSON.stringify(categories));
   localStorage.setItem('mmt_orders', JSON.stringify(orders));
   localStorage.setItem('mmt_history', JSON.stringify(history));
 }
@@ -2319,7 +2321,7 @@ function save(syncToFb=true) {
     window._fbWriting=true;
     // NB: history NON è più sincronizzata su Firebase per evitare bandwidth bloat.
     // Ogni dispositivo mantiene la propria history locale; l'archivio completo è su Google Sheets.
-    window.fbSave({menu,orders});
+    window.fbSave({menu,orders,categories});
     setTimeout(()=>{window._fbWriting=false;},2000);
   }
 }
@@ -2486,7 +2488,11 @@ function splitTable(mid) {
 }
 
 // Menu
-function getCats() { return ['Tutti'].concat([...new Set(menu.filter(function(i){return i.active;}).map(function(i){return i.cat;}))]); }
+function getCats() {
+  if(categories&&categories.length) return ['Tutti'].concat(categories);
+  // fallback se categories non esiste (compatibilità con dati vecchi)
+  return ['Tutti'].concat([...new Set(menu.filter(function(i){return i.active;}).map(function(i){return i.cat;}))]);
+}
 function renderCatTabs() {
   document.getElementById('cat-tabs').innerHTML=getCats().map(function(c){return '<button class="cat-tab'+(currentCat===c?' active':'')+'" onclick="selectCat(\''+c+'\')">'+c+'</button>';}).join('');
 }
@@ -2740,7 +2746,10 @@ function openAddItemModal() {
   document.getElementById('item-modal-save-btn').textContent='＋ Aggiungi Piatto';
   document.getElementById('item-modal-save-btn').onclick=saveNewItem;
   document.getElementById('new-item-name').value='';document.getElementById('new-item-price').value='';
-  document.getElementById('new-item-emoji').value='';document.getElementById('new-item-cat').value='Panini';
+  document.getElementById('new-item-emoji').value='';
+  var sel=document.getElementById('new-item-cat');
+  if(sel) sel.innerHTML=categories.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  if(sel) sel.value=categories[0]||'Panini';
   document.getElementById('item-modal-error').textContent='';document.getElementById('ing-input').value='';
   currentIngredients=[];renderIngTags();
   document.getElementById('add-item-modal').style.display='flex';
@@ -2756,8 +2765,8 @@ function openEditItemModal(id) {
   document.getElementById('new-item-emoji').value=item.emoji;
   document.getElementById('item-modal-error').textContent='';
   var sel=document.getElementById('new-item-cat');
-  var found=false;for(var o of sel.options){if(o.value===item.cat){found=true;break;}}
-  if(!found) sel.add(new Option(item.cat,item.cat));
+  sel.innerHTML=categories.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  if(!sel.querySelector('option[value="'+item.cat+'"]')) sel.add(new Option(item.cat,item.cat));
   sel.value=item.cat;
   currentIngredients=item.ingredients?[].concat(item.ingredients):[];
   document.getElementById('ing-input').value='';renderIngTags();

@@ -85,3 +85,36 @@ Confermare col proprietario che battere gli ordini sull'**Android al banco** (no
 
 ### Possibile sviluppo futuro (NON ancora fatto)
 Stampa 100% automatica via RawBT come **servizio di stampa di sistema Android** (fuori dal browser). Eliminerebbe il vincolo del gesto utente. Da valutare — richiede verifica documentazione RawBT.
+
+---
+
+## Pannello impostazioni (dal 2026-06-15)
+
+### Accesso
+- Pulsante **⚙️** nell'header, prima di "🔑 PIN" ed "⏻ Esci"
+- Apre il modal `#settings-modal` — accesso libero, nessun PIN richiesto
+
+### Toggle "Mostra note cucina"
+- **Default OFF** — il campo "Allergie, cotture... (* = surgelato)" è nascosto di default
+- Salva in `localStorage` chiave `'bc_settings'` (oggetto JSON con `showKitchenNotes: bool`)
+- Sincronizza su Firebase al path `bagno_capri/settings` (cross-device)
+- Il blocco da mostrare/nascondere ha `id="cart-kitchen-notes"` e contiene header + textarea
+
+### Funzioni JS aggiunte
+| Funzione | Descrizione |
+|---|---|
+| `openSettings()` | Apre il modal e sincronizza lo stato del toggle con localStorage |
+| `closeSettings()` | Chiude il modal |
+| `getSettings()` | Legge `bc_settings` da localStorage, default `{ showKitchenNotes: false }` |
+| `saveSettings(s)` | Salva in localStorage + scrive su Firebase `bagno_capri/settings` |
+| `toggleKitchenNotes(on)` | Handler del toggle: aggiorna settings e applica visibilità |
+| `applyKitchenNotesVisibility()` | Mostra/nasconde `#cart-kitchen-notes` in base a `getSettings()` |
+
+### Punti di chiamata di `applyKitchenNotesVisibility()`
+- **Boot**: dentro `unlockApp()` — si applica subito dopo il login con PIN
+- **Firebase sync**: nel listener `fbListen`, quando arriva `data.settings` — aggiorna localStorage e ri-applica
+
+### Commit e deploy
+- Commit locale: `0c171ff` — "Aggiunge pannello impostazioni + toggle 'Mostra note cucina' (default off)"
+- Pushato in produzione il 15 giugno 2026; sync cross-device confermato funzionante
+- Nota storica: il commit `4189bfd` ("2 copie cucina + 1 bar per ordine", 23 maggio) era rimasto solo locale ed è stato pushato in produzione la stessa sera del 15 giugno

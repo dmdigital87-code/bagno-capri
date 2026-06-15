@@ -1359,6 +1359,18 @@
   /* MAPPA TAVOLI in light: la palette tema-aware è già gestita da JS
      in renderTableGrid (P.canvasBg etc), non serve CSS */
 
+  /* TOGGLE SWITCH — usato in settings modal */
+  .switch span::before {
+    content: '';
+    position: absolute;
+    width: 22px; height: 22px;
+    left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: 0.3s;
+  }
+  .switch input:checked + span { background: var(--accent, #ff5a00); }
+  .switch input:checked + span::before { transform: translateX(22px); }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <script type="module">
@@ -1413,6 +1425,7 @@
           if (window._fbWriting) return;
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
           if (data.orders) { orders = data.orders; save(false); renderAll(); }
+          if (data.settings) { localStorage.setItem('bc_settings', JSON.stringify(data.settings)); applyKitchenNotesVisibility(); }
           // NB: data.history NON è più letto. La history è locale per dispositivo
           // (l'archivio completo degli ordini chiusi è su Google Sheets).
         });
@@ -1481,6 +1494,7 @@
           <span id="sheets-label" style="color:rgba(255,255,255,0.7)">Sheets</span>
         </div>
         <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Cambia tema" aria-label="Cambia tema">☾</button>
+        <button class="change-pin-btn" onclick="openSettings()" title="Impostazioni" aria-label="Impostazioni">⚙️</button>
         <button class="change-pin-btn" onclick="openChangePinModal()">🔑 PIN</button>
         <button class="logout-btn" onclick="logout()">⏻ Esci</button>
       </div>
@@ -1561,9 +1575,11 @@
           </div>
         </div>
         <div class="cart-right">
-          <div class="cart-header"><span style="font-size:0.82rem;opacity:0.8">📝 Note cucina</span></div>
-          <div style="padding:10px;flex:1">
-            <textarea id="cart-note" placeholder="Allergie, cotture... (* = surgelato)" style="width:100%;box-sizing:border-box;height:70px;padding:8px;border:1px solid var(--sand-dark);border-radius:8px;font-family:inherit;font-size:0.82rem;resize:none;background:var(--sand)"></textarea>
+          <div id="cart-kitchen-notes">
+            <div class="cart-header"><span style="font-size:0.82rem;opacity:0.8">📝 Note cucina</span></div>
+            <div style="padding:10px;flex:1">
+              <textarea id="cart-note" placeholder="Allergie, cotture... (* = surgelato)" style="width:100%;box-sizing:border-box;height:70px;padding:8px;border:1px solid var(--sand-dark);border-radius:8px;font-family:inherit;font-size:0.82rem;resize:none;background:var(--sand)"></textarea>
+            </div>
           </div>
           <div class="cart-footer">
             <div class="cart-total">
@@ -1618,6 +1634,26 @@
     </div>
   </div>
   <div class="menu-manager-grid" id="menu-manager-grid"></div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--white, #fff);border-radius:14px;padding:24px;max-width:400px;width:90%;max-height:80vh;overflow-y:auto">
+    <h2 style="margin:0 0 16px 0;font-size:1.2rem">⚙️ Impostazioni</h2>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--sand-dark,#ddd)">
+      <div>
+        <div style="font-weight:600">Mostra note cucina</div>
+        <div style="font-size:0.78rem;opacity:0.7;margin-top:4px">Mostra il campo "Allergie, cotture..." nel carrello</div>
+      </div>
+      <label class="switch" style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0">
+        <input type="checkbox" id="toggle-kitchen-notes" style="opacity:0;width:0;height:0" onchange="toggleKitchenNotes(this.checked)">
+        <span style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:28px;transition:0.3s"></span>
+      </label>
+    </div>
+
+    <button onclick="closeSettings()" style="margin-top:20px;width:100%;padding:12px;background:var(--coral, #ff5a00);color:#fff;border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
+  </div>
 </div>
 
 <!-- Add/Edit Item Modal -->
@@ -1986,6 +2022,7 @@ function showPinError(msg) {
 function unlockApp() {
   document.getElementById('login-screen').classList.add('hidden');
   sessionStorage.setItem('mmt_unlocked','1');
+  applyKitchenNotesVisibility();
 }
 
 function logout() {
@@ -2003,6 +2040,43 @@ function openChangePinModal() {
   document.getElementById('change-pin-modal').style.display='flex';
 }
 function closeChangePinModal() { document.getElementById('change-pin-modal').style.display='none'; }
+
+function openSettings() {
+  document.getElementById('settings-modal').style.display = 'flex';
+  document.getElementById('toggle-kitchen-notes').checked = getSettings().showKitchenNotes;
+  applyKitchenNotesVisibility();
+}
+function closeSettings() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+function getSettings() {
+  try {
+    var s = JSON.parse(localStorage.getItem('bc_settings') || '{}');
+    return { showKitchenNotes: s.showKitchenNotes !== undefined ? s.showKitchenNotes : false };
+  } catch(e) { return { showKitchenNotes: false }; }
+}
+function saveSettings(s) {
+  localStorage.setItem('bc_settings', JSON.stringify(s));
+  if (typeof window.fbSave === 'function') {
+    window._fbWriting = true;
+    var ref = window._fb && window._fb.ref ? window._fb.ref(window._fb.db, 'bagno_capri/settings') : null;
+    if (ref && window._fb.set) { window._fb.set(ref, s); }
+    setTimeout(function(){ window._fbWriting = false; }, 2000);
+  }
+}
+function toggleKitchenNotes(on) {
+  var s = getSettings();
+  s.showKitchenNotes = on;
+  saveSettings(s);
+  applyKitchenNotesVisibility();
+}
+function applyKitchenNotesVisibility() {
+  var el = document.getElementById('cart-kitchen-notes');
+  if (!el) return;
+  var s = getSettings();
+  el.style.display = s.showKitchenNotes ? '' : 'none';
+}
+
 function saveChangePin() {
   var c=document.getElementById('cp-current').value, n=document.getElementById('cp-new').value, cf=document.getElementById('cp-confirm').value, s=getStoredPin();
   if(c!==s){document.getElementById('cp-error').textContent='PIN attuale errato';return;}

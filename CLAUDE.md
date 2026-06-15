@@ -160,3 +160,39 @@ Lo stile inline `background:white` hardcoded è un anti-pattern in app multi-tem
 
 ### Stato test
 Testato su Mac (Chrome + Safari). Stampa sull'Android NON ancora testata (in attesa disponibilità proprietario). I tre scontrini devono includere "Cliente: <nome>" sotto Coperti se il campo è valorizzato.
+
+---
+
+## Gestione dinamica categorie menu (dal 2026-06-15)
+
+### Modello dati
+- Nuova variabile globale `categories` (array di stringhe in ordine), salvata in localStorage chiave `mmt_categories` e sincronizzata via Firebase al path `bagno_capri/categories` accanto a menu/orders/settings.
+- Default in caso di assenza: `['Panini','Primi','Insalatone','Piatti Freddi','Piatti Caldi','Contorni','Bevande']`.
+- I piatti continuano ad avere `item.cat` come stringa (NO modifiche al modello piatto). `categories` è solo l'array di ordine + presenza.
+
+### Retro-compatibilità
+`getCats()` usa `categories` se presente, altrimenti fa fallback al vecchio comportamento derivato (unique su `menu.map(i => i.cat)`). Quindi anche dati Firebase vecchi senza categories continuano a funzionare.
+
+### UI gestione (modal #categories-modal)
+- Aperto da bottone "🏷️ Categorie" nel tab Menu (accanto a "+ Aggiungi Piatto")
+- Mostra lista categorie con: conteggio piatti, frecce ↑↓ per riordinare, ✏️ per rinominare (con prompt), 🗑️ per eliminare
+- Input + bottone "Aggiungi" in cima per creare nuova categoria
+- Frecce disabilitate ai bordi (Panini non può salire, Bevande non può scendere)
+- Rinomina aggiorna anche `item.cat` di tutti i piatti che usano quella categoria (evita piatti orfani)
+- Elimina ha due varianti di conferma: solo categoria se vuota, "categoria + N piatti IRREVERSIBILE" se ha piatti — i piatti vengono cancellati insieme alla categoria
+
+### Funzioni nuove
+`openCategoriesModal`, `closeCategoriesModal`, `renderCategoriesList`, `addCategory`, `moveCategory(idx, delta)`, `renameCategory(idx)`, `deleteCategory(idx)`
+
+### Select del modal Add/Edit piatto: ora dinamico
+Il `<select id="new-item-cat">` non ha più `<option>` hardcoded. Le opzioni vengono popolate dinamicamente da `categories` ogni volta che il modal apre, sia in `openAddItemModal` che in `openEditItemModal`. Nel caso di edit di un piatto la cui categoria non è più nell'array (caso limite, post-eliminazione), viene aggiunta come opzione extra per non perdere l'associazione.
+
+### Commit di riferimento (15 giugno 2026)
+- `c636602`: refactor invisibile — array categories esplicito, retro-compat, app invariata
+- `67dfcc3`: UI gestione categorie menu (crea/rinomina/elimina/riordina con frecce)
+
+### Stato test
+Testato sul Mac (Chrome + Safari): apertura modal, crea/rinomina/riordina/elimina (con e senza piatti), sync filtro carrello, persistenza dopo ricarica. Sync cross-device NON ancora testato (proprietario disponibile dopo).
+
+### Richiesta cliente ancora aperta
+Gestione dinamica TAVOLI (aggiungere/togliere/nominare/spostare sulla mappa). Da affrontare in sessione dedicata, fuori stagione o in giornata tranquilla. Più rischiosa delle categorie perché la mappa è hardcoded come array `MAP_SPOTS`.

@@ -2421,12 +2421,14 @@ function selectTable(id) {
   }
   selectedTable=id; coperti=0;
   document.getElementById('coperti-val').textContent='0';
-  var activeOrders_pre=orders.filter(function(o){return o.table===id&&o.status==='pending';});
-  cliente=activeOrders_pre.length?(activeOrders_pre[0].cliente||''):'';
+  var activeOrders_pre=orders.filter(function(o){return o.table===id&&o.status==='pending';})
+    .sort(function(a,b){return (b.time||0)-(a.time||0);});
+  var latest=activeOrders_pre[0];
+  cliente=latest?(latest.cliente||''):'';
   var clienteInput=document.getElementById('cart-cliente');
   if(clienteInput) clienteInput.value=cliente;
-  if(activeOrders_pre.length&&activeOrders_pre[0].coperti){
-    coperti=activeOrders_pre[0].coperti;
+  if(latest&&latest.coperti){
+    coperti=latest.coperti;
     document.getElementById('coperti-val').textContent=coperti;
   }
   var spot=MAP_SPOTS.find(function(s){return s.id===id;});

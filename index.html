@@ -1636,6 +1636,7 @@
     <div class="section-title" style="margin:0">Gestione Menu</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="testSheetsConnection()" style="padding:10px 16px;background:var(--gold);color:white;border:none;border-radius:8px;font-family:inherit;font-weight:600;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:6px">📊 Test Sheets</button>
+      <button class="btn-add-item" onclick="openCategoriesModal()" style="background:var(--sea-light)">🏷️ Categorie</button>
       <button class="btn-add-item" onclick="openAddItemModal()">＋ Aggiungi Piatto</button>
     </div>
   </div>
@@ -1659,6 +1660,23 @@
     </div>
 
     <button onclick="closeSettings()" style="margin-top:20px;width:100%;padding:12px;background:var(--coral, #ff5a00);color:#fff;border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
+  </div>
+</div>
+
+<!-- Categories Modal -->
+<div id="categories-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--white,#fff);border-radius:14px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:var(--text)">
+    <h2 style="margin:0 0 16px 0;font-size:1.2rem">🏷️ Gestione categorie</h2>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" id="new-cat-name" placeholder="Nuova categoria..."
+        style="flex:1;border:1px solid var(--sand-dark);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:0.9rem;background:var(--white);color:var(--text)">
+      <button onclick="addCategory()" style="background:var(--coral,#ff5a00);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer">＋ Aggiungi</button>
+    </div>
+
+    <div id="categories-list" style="display:flex;flex-direction:column;gap:6px"></div>
+
+    <button onclick="closeCategoriesModal()" style="margin-top:20px;width:100%;padding:12px;background:var(--sand-dark);color:var(--text);border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
   </div>
 </div>
 
@@ -2078,6 +2096,85 @@ function applyKitchenNotesVisibility() {
   if (!el) return;
   var s = getSettings();
   el.style.display = s.showKitchenNotes ? '' : 'none';
+}
+
+function openCategoriesModal() {
+  document.getElementById('categories-modal').style.display = 'flex';
+  document.getElementById('new-cat-name').value = '';
+  renderCategoriesList();
+}
+function closeCategoriesModal() {
+  document.getElementById('categories-modal').style.display = 'none';
+}
+function renderCategoriesList() {
+  var list = document.getElementById('categories-list');
+  if (!list) return;
+  list.innerHTML = categories.map(function(c, i){
+    var count = menu.filter(function(p){return p.cat===c;}).length;
+    var canUp   = i > 0;
+    var canDown = i < categories.length - 1;
+    var safeCat = String(c).replace(/[<>&"]/g,function(x){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[x];});
+    return '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--sand);border-radius:8px;border:1px solid var(--sand-dark)">'
+      + '<button onclick="moveCategory('+i+',-1)" '+(canUp?'':'disabled')+' style="background:transparent;border:0;font-size:1.1rem;cursor:pointer;'+(canUp?'':'opacity:0.3;cursor:not-allowed')+';color:var(--text)">↑</button>'
+      + '<button onclick="moveCategory('+i+',1)" '+(canDown?'':'disabled')+' style="background:transparent;border:0;font-size:1.1rem;cursor:pointer;'+(canDown?'':'opacity:0.3;cursor:not-allowed')+';color:var(--text)">↓</button>'
+      + '<span style="flex:1;font-weight:600;color:var(--text)">'+safeCat+'</span>'
+      + '<span style="font-size:0.78rem;opacity:0.7;color:var(--text)">'+count+' piatti</span>'
+      + '<button onclick="renameCategory('+i+')" title="Rinomina" style="background:transparent;border:0;font-size:1rem;cursor:pointer;padding:4px 8px">✏️</button>'
+      + '<button onclick="deleteCategory('+i+')" title="Elimina" style="background:transparent;border:0;font-size:1rem;cursor:pointer;padding:4px 8px;color:#c33">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+function addCategory() {
+  var input = document.getElementById('new-cat-name');
+  var name = (input.value || '').trim();
+  if (!name) return;
+  if (categories.indexOf(name) >= 0) { alert('Categoria già esistente'); return; }
+  categories.push(name);
+  save();
+  renderCategoriesList();
+  renderCatTabs();
+  input.value = '';
+}
+function moveCategory(idx, delta) {
+  var newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= categories.length) return;
+  var tmp = categories[idx];
+  categories[idx] = categories[newIdx];
+  categories[newIdx] = tmp;
+  save();
+  renderCategoriesList();
+  renderCatTabs();
+  renderMenuGrid();
+}
+function renameCategory(idx) {
+  var oldName = categories[idx];
+  var newName = prompt('Nuovo nome per "'+oldName+'":', oldName);
+  if (!newName) return;
+  newName = newName.trim();
+  if (!newName || newName === oldName) return;
+  if (categories.indexOf(newName) >= 0) { alert('Categoria già esistente'); return; }
+  categories[idx] = newName;
+  menu.forEach(function(p){ if(p.cat === oldName) p.cat = newName; });
+  save();
+  renderCategoriesList();
+  renderCatTabs();
+  renderMenuGrid();
+  renderMenuManager();
+}
+function deleteCategory(idx) {
+  var name = categories[idx];
+  var dishes = menu.filter(function(p){return p.cat === name;});
+  var msg = dishes.length > 0
+    ? 'Eliminare la categoria "'+name+'" E i suoi '+dishes.length+' piatti?\n\nQuesta azione è IRREVERSIBILE.'
+    : 'Eliminare la categoria "'+name+'"?';
+  if (!confirm(msg)) return;
+  categories.splice(idx, 1);
+  menu = menu.filter(function(p){return p.cat !== name;});
+  save();
+  renderCategoriesList();
+  renderCatTabs();
+  renderMenuGrid();
+  renderMenuManager();
 }
 
 function saveChangePin() {

@@ -118,3 +118,45 @@ Stampa 100% automatica via RawBT come **servizio di stampa di sistema Android** 
 - Commit locale: `0c171ff` — "Aggiunge pannello impostazioni + toggle 'Mostra note cucina' (default off)"
 - Pushato in produzione il 15 giugno 2026; sync cross-device confermato funzionante
 - Nota storica: il commit `4189bfd` ("2 copie cucina + 1 bar per ordine", 23 maggio) era rimasto solo locale ed è stato pushato in produzione la stessa sera del 15 giugno
+
+---
+
+## Campo cliente per sessione tavolo (dal 2026-06-15)
+
+### Cos'è
+Ogni ordine può avere un nome cliente associato (es. "Rossi"). È una proprietà di sessione tavolo: vive negli order, sparisce quando la sessione chiude. Visibile nel carrello, in vista cucina, e stampato sullo scontrino.
+
+### Implementazione
+- Variabile globale `cliente` (string, default '') in index.html riga ~2210
+- Campo input `#cart-cliente` dentro `#cart-cliente-row` nel cart-panel (riga ~1565), placeholder "es. Rossi"
+- Handler `updateCliente(v)` trimma e salva nella variabile globale
+- Salvato in `order.cliente` dentro `sendOrder()` (riga ~2609)
+
+### Autofill da ultimo ordine sessione
+In `selectTable()` (riga ~2421-2431):
+- Filtra ordini pending del tavolo
+- Ordina per `time` decrescente
+- Prende il latest e copia `cliente` e `coperti` nei rispettivi state/UI
+- Se il tavolo è vuoto, resetta a '' e 0
+
+### Reset
+- `closeCart()`: azzera cliente e l'input
+- Selezione di altro tavolo: vedi selectTable
+
+### Vista cucina
+Nelle card di `renderKitchen()` il nome compare inline accanto al tavolo: "Spiaggia 1 — Rossi" (con escape HTML inline su o.cliente per sicurezza, perché non esiste funzione escapeHtml nel codice).
+
+### Stampa
+In `bagno-print.js` funzione `buildTicket`, dopo la riga Coperti: "Cliente: Rossi" in grassetto, stampata SOLO se `order.cliente` non è vuoto/whitespace.
+
+### Commit di riferimento (15 giugno 2026)
+- `79f581e`: campo cliente in app + autofill coperti
+- `cbb1cd3`: fix leggibilità dark mode input Cliente
+- `d34e230`: fix leggibilità dark mode nomi piatti in "Già in cucina"
+- `281ab24`: nome cliente sullo scontrino
+
+### Lezione raccolta
+Lo stile inline `background:white` hardcoded è un anti-pattern in app multi-tema: in dark mode il testo eredita un colore chiaro dal body e diventa bianco-su-bianco. Sempre usare `var(--white)` + `color:var(--text)` per elementi con sfondo chiaro fisso. Punti correnti dell'app da auditare se servono altri fix: ogni elemento con stile inline e fondo chiaro fisso.
+
+### Stato test
+Testato su Mac (Chrome + Safari). Stampa sull'Android NON ancora testata (in attesa disponibilità proprietario). I tre scontrini devono includere "Cliente: <nome>" sotto Coperti se il campo è valorizzato.

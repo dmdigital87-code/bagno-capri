@@ -1562,6 +1562,11 @@
             </div>
             <button onclick="closeCart()" style="background:rgba(255,255,255,0.15);border:none;color:white;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:1rem;flex-shrink:0">✕</button>
           </div>
+          <div id="cart-cliente-row" style="padding:6px 12px;background:var(--sand);border-bottom:1px solid var(--sand-dark);display:flex;align-items:center;gap:8px">
+            <span style="font-size:0.82rem;opacity:0.8;flex-shrink:0">👤 Cliente:</span>
+            <input type="text" id="cart-cliente" placeholder="es. Rossi" oninput="updateCliente(this.value)"
+              style="flex:1;border:1px solid var(--sand-dark);border-radius:6px;padding:6px 8px;font-family:inherit;font-size:0.82rem;background:white">
+          </div>
           <div style="padding:6px 12px;font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--sand);border-bottom:1px solid var(--sand-dark)">🛒 Nuovo ordine</div>
           <div class="cart-items" id="cart-items" style="max-height:180px">
             <div class="cart-empty"><div class="cart-empty-icon">🛒</div><div>Aggiungi piatti dal menu</div></div>
@@ -2207,6 +2212,7 @@ function toggleTheme() {
 let cart = [];
 let selectedTable = null;
 let coperti = 0;
+let cliente = '';
 let mergeMode = false;
 let mergeSelection = [];
 let mergedTables = {};
@@ -2415,6 +2421,14 @@ function selectTable(id) {
   }
   selectedTable=id; coperti=0;
   document.getElementById('coperti-val').textContent='0';
+  var activeOrders_pre=orders.filter(function(o){return o.table===id&&o.status==='pending';});
+  cliente=activeOrders_pre.length?(activeOrders_pre[0].cliente||''):'';
+  var clienteInput=document.getElementById('cart-cliente');
+  if(clienteInput) clienteInput.value=cliente;
+  if(activeOrders_pre.length&&activeOrders_pre[0].coperti){
+    coperti=activeOrders_pre[0].coperti;
+    document.getElementById('coperti-val').textContent=coperti;
+  }
   var spot=MAP_SPOTS.find(function(s){return s.id===id;});
   document.getElementById('cart-table-label').textContent=spot?spot.label:id;
   var cp=document.getElementById('cart-panel');
@@ -2433,14 +2447,16 @@ function selectTable(id) {
 }
 
 function closeCart() {
-  selectedTable=null;cart=[];coperti=0;
+  selectedTable=null;cart=[];coperti=0;cliente='';
   var cp=document.getElementById('cart-panel');if(cp) cp.classList.remove('visible');
   document.getElementById('cart-table-label').textContent='—';
   document.getElementById('coperti-val').textContent='0';
+  var ci=document.getElementById('cart-cliente');if(ci) ci.value='';
   renderTableGrid();renderCart();updateSendBtn();
 }
 
 function changeCoperti(d) { coperti=Math.max(0,coperti+d); document.getElementById('coperti-val').textContent=coperti; }
+function updateCliente(v) { cliente=(v||'').trim(); }
 
 // Merge
 function startMerge() { mergeMode=true;mergeSelection=[];document.getElementById('merge-bar').classList.add('visible');document.getElementById('btn-start-merge').style.display='none';updateMergeBar(); }
@@ -2595,7 +2611,7 @@ function sendOrder() {
   var existing=orders.filter(function(o){return o.table===selectedTable&&o.status!=='annullato';});
   var sessionId=existing.length>0?(existing[0].sessionId||existing[0].id):Date.now();
   var orderNum=existing.filter(function(o){return o.status!=='annullato';}).length+1;
-  var order={id:Date.now(),sessionId:sessionId,orderNum:orderNum,table:selectedTable,coperti:coperti,items:cart.map(function(i){return Object.assign({},i);}),note:note,time:Date.now(),status:'pending',checkedItems:[]};
+  var order={id:Date.now(),sessionId:sessionId,orderNum:orderNum,table:selectedTable,coperti:coperti,cliente:cliente,items:cart.map(function(i){return Object.assign({},i);}),note:note,time:Date.now(),status:'pending',checkedItems:[]};
   orders.push(order);
   if(window.RBPrint) RBPrint.printOrder(order);
   history.push(Object.assign({},order,{status:'in-corso'}));
@@ -2631,7 +2647,7 @@ function renderKitchen() {
     var tc=mins<10?'fresh':mins<20?'medium':'late';
     var tl=mins===0?'Ora':mins+'min fa';
     var isF=o.orderNum&&o.orderNum>1;
-    return '<div class="order-card'+(mins>=20?' urgent':'')+(o.status==='done'?' done':'')+(isF?' followup':'')+'"><div class="order-card-header"><div class="order-table">'+getSpotLabel(o.table)+(isF?' <span class="update-badge">➕ #'+o.orderNum+'</span>':'')+'</div><div class="order-time-badge '+tc+'">⏱ '+tl+'</div></div><div class="order-items">'+o.items.map(function(item){
+    return '<div class="order-card'+(mins>=20?' urgent':'')+(o.status==='done'?' done':'')+(isF?' followup':'')+'"><div class="order-card-header"><div class="order-table">'+getSpotLabel(o.table)+(o.cliente?' — <span style="font-weight:600;opacity:0.9">'+String(o.cliente).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];})+'</span>':'')+(isF?' <span class="update-badge">➕ #'+o.orderNum+'</span>':'')+'</div><div class="order-time-badge '+tc+'">⏱ '+tl+'</div></div><div class="order-items">'+o.items.map(function(item){
       var ck=o.checkedItems&&o.checkedItems.includes(item.id+'-'+item.name);
       var rm=item.removed&&item.removed.length?'<div class="kitchen-mod kitchen-mod-rm">✕ senza: '+item.removed.join(', ')+'</div>':'';
       var ex=item.extra&&item.extra.length?'<div class="kitchen-mod kitchen-mod-ex">+ extra: '+item.extra.join(', ')+'</div>':'';

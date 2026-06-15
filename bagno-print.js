@@ -44,6 +44,7 @@
     push(BIG);var head=spotLabel(order.table);if(order.orderNum)head+='  #'+order.orderNum;
     push(txt(head));push(nl());push(NORMAL);
     push(txt('Coperti: '+(order.coperti||'-')+'   '+hhmm(order.time)));push(nl());
+    if(order.cliente&&String(order.cliente).trim()){push(BOLD_ON);push(txt('Cliente: '+order.cliente));push(nl());push(BOLD_OFF);}
     push(txt(LINE));push(nl());
     for(var i=0;i<items.length;i++){var it=items[i];
       push(BOLD_ON);push(txt((it.qty||1)+'x '+(it.name||'')));push(nl());push(BOLD_OFF);

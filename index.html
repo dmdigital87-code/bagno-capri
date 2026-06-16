@@ -2215,6 +2215,7 @@ function renderSpotsList() {
       + '<span style="flex:1;font-weight:600;color:var(--text)">'+safeLabel+'</span>'
       + '<span style="font-size:0.72rem;opacity:0.6;color:var(--text)">'+safeType+'</span>'
       + '<button onclick="renameSpot(\''+spot.id+'\')" title="Rinomina" style="background:transparent;border:0;font-size:1rem;cursor:pointer;padding:4px 8px">✏️</button>'
+      + '<button onclick="deleteSpot(\''+spot.id+'\')" title="Elimina" style="background:transparent;border:0;font-size:1rem;cursor:pointer;padding:4px 8px;color:#c33">🗑️</button>'
       + '</div>';
   }).join('');
 }
@@ -2226,6 +2227,22 @@ function renameSpot(id) {
   newLabel = newLabel.trim();
   if (!newLabel || newLabel === spot.label) return;
   spot.label = newLabel;
+  save();
+  renderSpotsList();
+  renderTableGrid();
+}
+function deleteSpot(id) {
+  var spot = MAP_SPOTS.find(function(s){return s.id === id;});
+  if (!spot) return;
+  var activeOrders = orders.filter(function(o){
+    return o.table === id && o.status === 'pending';
+  });
+  if (activeOrders.length > 0) {
+    alert('Impossibile eliminare "'+spot.label+'": ha '+activeOrders.length+' ordine/i attivo/i.\n\nLibera prima il tavolo (Paga & Libera) e riprova.');
+    return;
+  }
+  if (!confirm('Eliminare il tavolo "'+spot.label+'"?\n\nGli ordini storici di questo tavolo resteranno nell\'archivio.')) return;
+  MAP_SPOTS = MAP_SPOTS.filter(function(s){return s.id !== id;});
   save();
   renderSpotsList();
   renderTableGrid();
@@ -2409,7 +2426,7 @@ function getSpotLabel(id) {
   if(!id) return '—';
   if(String(id).startsWith('ASP-')) return '🛍️ Asporto #'+id.replace('ASP-','');
   var spot = MAP_SPOTS.find(s=>s.id===id);
-  if(!spot) return id;
+  if(!spot) return id || '?';
   if(spot.type==='spiaggia') return 'Spiaggia '+spot.label;
   if(spot.type==='pedana') return 'Pedana '+spot.label;
   return spot.label;

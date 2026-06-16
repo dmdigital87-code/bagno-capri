@@ -196,3 +196,70 @@ Testato sul Mac (Chrome + Safari): apertura modal, crea/rinomina/riordina/elimin
 
 ### Richiesta cliente ancora aperta
 Gestione dinamica TAVOLI (aggiungere/togliere/nominare/spostare sulla mappa). Da affrontare in sessione dedicata, fuori stagione o in giornata tranquilla. Più rischiosa delle categorie perché la mappa è hardcoded come array `MAP_SPOTS`.
+
+---
+
+## Riordino piatti del menu (dal 2026-06-16)
+
+### Funzionalità
+Nel tab Menu, ogni piatto ha una colonna verticale ↑↓ a sinistra dell'emoji per essere riordinato nell'array `menu`. Lo spostamento è globale (slegato dalla categoria): un piatto può essere spostato ovunque nell'array, ma la sua `cat` resta invariata.
+
+### Effetto a cascata
+L'ordine dell'array `menu` si riflette automaticamente nella vista carrello (renderMenuGrid) perché entrambe le funzioni iterano direttamente sull'array senza sort. Spostare un piatto nel tab Menu lo sposta anche nei filtri categoria del cameriere.
+
+### Funzione nuova
+`moveMenuItem(id, delta)` usa findIndex per ID (stabile anche se l'array cambia per sync Firebase tra un click e l'altro), scambia con menu[idx±1], save() + renderMenuManager + renderMenuGrid + renderCatTabs.
+
+### Commit di riferimento
+- `8d2c66f`: Aggiunge frecce ↑↓ per riordinare i piatti nel tab Menu
+
+---
+
+## Gestione dinamica tavoli (dal 2026-06-16) — in corso
+
+### Stato
+- Commit 1 FATTO (`2488541`): persistence MAP_SPOTS + rinomina tavoli
+- Commit 2 FATTO (`8443f41`): elimina tavolo con blocco se sessione attiva
+- Commit 3 DA FARE in sessione futura: crea nuovo tavolo + sposta posizione
+
+### Persistence
+- MAP_SPOTS era `const`, ora `let` con fallback localStorage chiave `mmt_spots`
+- Salvato in `_writeLocal` + `fbSave` (chiave Firebase `spots`, lowercase per convention)
+- Listener Firebase legge `data.spots` → aggiorna MAP_SPOTS + localStorage + renderTableGrid
+
+### UI accesso
+Bottone ⚙️ Impostazioni → sezione "Gestione tavoli" → bottone "🪑 Gestisci" apre modal `#spots-modal`.
+
+### Funzioni
+- `renameSpot(id)`: prompt nuovo label, modifica spot.label, save, render
+- `deleteSpot(id)`: blocca se `orders.some(o.table===id && o.status==='pending')`; altrimenti conferma + filter MAP_SPOTS + save + render
+- `getSpotLabel` modificato con fallback `id || '?'` per spot eliminati (gli ordini storici di tavoli cancellati mostrano l'id grezzo)
+
+### TASK APERTO: ridondanza prefisso in getSpotLabel
+`getSpotLabel` fa:
+```
+if(spot.type==='spiaggia') return 'Spiaggia '+spot.label;
+if(spot.type==='pedana') return 'Pedana '+spot.label;
+```
+Con label originali "Spiaggia 1", "Pedana 1", ecc. il prefisso causa duplicazione "Spiaggia Spiaggia 1". Funziona finché non si rinomina.
+Se proprietario rinomina "Spiaggia 1" in "Veranda", il risultato diventa "Spiaggia Veranda" (confondente).
+FIX semplice: rimuovere i due `if`, usare sempre `return spot.label`.
+Da affrontare al Commit 3 (Crea+Sposta) quando si rivede la logica dei tipi, o appena il proprietario rinomina la prima Spiaggia/Pedana e si lamenta.
+
+### TASK APERTO: ripristino tavoli eliminati in test
+Durante test potrebbero essere stati eliminati tavoli (es. SP4, Bancone X). Non è ancora possibile ricrearli (Crea sarà nel Commit 3). Se serve recuperare i tavoli al loro stato originale 28-spot: cancellare `mmt_spots` da localStorage del dispositivo OPPURE cancellare il nodo `bagno_capri/spots` da Firebase Console. Il fallback al default ripristina i 28 originali.
+
+---
+
+## Stato richieste cliente (snapshot 2026-06-16)
+
+| Richiesta | Stato |
+|---|---|
+| Gestione note cucina nascondibili | ✅ FATTA (15 giu) |
+| Nome cliente sul tavolo | ✅ FATTA (15 giu) |
+| Gestione categorie menu | ✅ FATTA (15 giu) |
+| Riordino piatti del menu | ✅ FATTA (16 giu) |
+| Gestione tavoli rinomina | ✅ FATTA (16 giu) |
+| Gestione tavoli elimina | ✅ FATTA (16 giu) |
+| Gestione tavoli crea+sposta | ⏳ Commit 3 in sessione futura |
+| Regole sicurezza Firebase | ⚠️ Sospeso da fine maggio (non urgente) |

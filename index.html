@@ -1425,6 +1425,7 @@
           if (window._fbWriting) return;
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
           if (data.categories) { categories = data.categories; localStorage.setItem('mmt_categories', JSON.stringify(categories)); }
+          if (data.spots) { MAP_SPOTS = data.spots; localStorage.setItem('mmt_spots', JSON.stringify(MAP_SPOTS)); if (typeof renderTableGrid === 'function') renderTableGrid(); }
           if (data.orders) { orders = data.orders; save(false); renderAll(); }
           if (data.settings) { localStorage.setItem('bc_settings', JSON.stringify(data.settings)); applyKitchenNotesVisibility(); }
           // NB: data.history NON è più letto. La history è locale per dispositivo
@@ -1659,6 +1660,16 @@
       </label>
     </div>
 
+    <div style="padding:12px 0;border-bottom:1px solid var(--sand-dark,#ddd)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:600">Gestione tavoli</div>
+          <div style="font-size:0.78rem;opacity:0.7;margin-top:4px">Rinomina i tavoli della mappa</div>
+        </div>
+        <button onclick="openSpotsModal()" style="background:var(--sea-light,#5aa);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer">🪑 Gestisci</button>
+      </div>
+    </div>
+
     <button onclick="closeSettings()" style="margin-top:20px;width:100%;padding:12px;background:var(--coral, #ff5a00);color:#fff;border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
   </div>
 </div>
@@ -1677,6 +1688,16 @@
     <div id="categories-list" style="display:flex;flex-direction:column;gap:6px"></div>
 
     <button onclick="closeCategoriesModal()" style="margin-top:20px;width:100%;padding:12px;background:var(--sand-dark);color:var(--text);border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
+  </div>
+</div>
+
+<!-- Spots Modal -->
+<div id="spots-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--white,#fff);border-radius:14px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:var(--text)">
+    <h2 style="margin:0 0 16px 0;font-size:1.2rem">🪑 Gestione tavoli</h2>
+    <div style="font-size:0.85rem;opacity:0.7;margin-bottom:12px">Tocca ✏️ per rinominare un tavolo.</div>
+    <div id="spots-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button onclick="closeSpotsModal()" style="margin-top:20px;width:100%;padding:12px;background:var(--sand-dark);color:var(--text);border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
   </div>
 </div>
 
@@ -2177,6 +2198,39 @@ function deleteCategory(idx) {
   renderMenuManager();
 }
 
+function openSpotsModal() {
+  document.getElementById('spots-modal').style.display = 'flex';
+  renderSpotsList();
+}
+function closeSpotsModal() {
+  document.getElementById('spots-modal').style.display = 'none';
+}
+function renderSpotsList() {
+  var list = document.getElementById('spots-list');
+  if (!list) return;
+  list.innerHTML = MAP_SPOTS.map(function(spot){
+    var safeLabel = String(spot.label||'').replace(/[<>&"]/g,function(x){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[x];});
+    var safeType = String(spot.type||'').replace(/[<>&"]/g,function(x){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[x];});
+    return '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--sand);border-radius:8px;border:1px solid var(--sand-dark)">'
+      + '<span style="flex:1;font-weight:600;color:var(--text)">'+safeLabel+'</span>'
+      + '<span style="font-size:0.72rem;opacity:0.6;color:var(--text)">'+safeType+'</span>'
+      + '<button onclick="renameSpot(\''+spot.id+'\')" title="Rinomina" style="background:transparent;border:0;font-size:1rem;cursor:pointer;padding:4px 8px">✏️</button>'
+      + '</div>';
+  }).join('');
+}
+function renameSpot(id) {
+  var spot = MAP_SPOTS.find(function(s){return s.id === id;});
+  if (!spot) return;
+  var newLabel = prompt('Nuovo nome per "'+spot.label+'":', spot.label);
+  if (!newLabel) return;
+  newLabel = newLabel.trim();
+  if (!newLabel || newLabel === spot.label) return;
+  spot.label = newLabel;
+  save();
+  renderSpotsList();
+  renderTableGrid();
+}
+
 function saveChangePin() {
   var c=document.getElementById('cp-current').value, n=document.getElementById('cp-new').value, cf=document.getElementById('cp-confirm').value, s=getStoredPin();
   if(c!==s){document.getElementById('cp-error').textContent='PIN attuale errato';return;}
@@ -2319,7 +2373,7 @@ let kitchenFilter = 'all';
 let nextId = menu.reduce((m,i)=>Math.max(m,i.id),0)+1;
 
 // ============ MAP DATA ============
-const MAP_SPOTS = [
+let MAP_SPOTS = JSON.parse(localStorage.getItem('mmt_spots')||'null') || [
   {id:'SP1',label:'Spiaggia 1',type:'spiaggia',x:6,y:4,w:64,h:20,shape:'rect'},
   {id:'SP2',label:'Spiaggia 2',type:'spiaggia',x:76,y:4,w:64,h:20,shape:'rect'},
   {id:'SP3',label:'Spiaggia 3',type:'spiaggia',x:200,y:4,w:52,h:20,shape:'rect'},
@@ -2387,6 +2441,7 @@ function purgeOldHistory() {
 function _writeLocal() {
   localStorage.setItem('mmt_menu', JSON.stringify(menu));
   localStorage.setItem('mmt_categories', JSON.stringify(categories));
+  localStorage.setItem('mmt_spots', JSON.stringify(MAP_SPOTS));
   localStorage.setItem('mmt_orders', JSON.stringify(orders));
   localStorage.setItem('mmt_history', JSON.stringify(history));
 }
@@ -2418,7 +2473,7 @@ function save(syncToFb=true) {
     window._fbWriting=true;
     // NB: history NON è più sincronizzata su Firebase per evitare bandwidth bloat.
     // Ogni dispositivo mantiene la propria history locale; l'archivio completo è su Google Sheets.
-    window.fbSave({menu,orders,categories});
+    window.fbSave({menu,orders,categories,spots:MAP_SPOTS});
     setTimeout(()=>{window._fbWriting=false;},2000);
   }
 }

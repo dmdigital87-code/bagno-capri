@@ -2698,18 +2698,6 @@ function renderTableGrid() {
       svg.push('<line x1="0" y1="'+gy+'" x2="'+SVG_W+'" y2="'+gy+'" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>');
     }
   }
-  // Zone
-  svg.push('<rect x="4" y="2" width="138" height="24" rx="6" fill="'+P.zoneBg+'" stroke="rgba(255,122,61,0.3)" stroke-width="1"/>');
-  svg.push('<text x="75" y="15" text-anchor="middle" font-size="7" fill="'+P.zoneText+'" font-weight="600" letter-spacing="0.5">SPIAGGIA 1-2</text>');
-  svg.push('<rect x="198" y="2" width="108" height="24" rx="6" fill="'+P.zoneBg+'" stroke="rgba(255,122,61,0.3)" stroke-width="1"/>');
-  svg.push('<text x="252" y="15" text-anchor="middle" font-size="7" fill="'+P.zoneText+'" font-weight="600" letter-spacing="0.5">SPIAGGIA 3-4</text>');
-  svg.push('<rect x="4" y="26" width="60" height="196" rx="10" fill="'+P.deepBg+'" stroke="'+P.zoneStroke+'" stroke-width="1"/>');
-  svg.push('<rect x="64" y="26" width="22" height="196" rx="4" fill="'+P.deepBg+'" stroke="'+P.zoneStroke+'" stroke-width="1"/>');
-  svg.push('<rect x="88" y="26" width="218" height="196" rx="10" fill="'+P.deepBg+'" stroke="'+P.zoneStroke+'" stroke-width="1"/>');
-  svg.push('<text x="197" y="25" text-anchor="middle" font-size="5.5" fill="'+P.zoneText+'" font-weight="600" letter-spacing="1">INTERNO</text>');
-  svg.push('<rect x="4" y="230" width="'+(SVG_W-8)+'" height="'+(SVG_H-234)+'" rx="10" fill="'+P.deepBg+'" stroke="'+P.zoneStroke+'" stroke-width="1"/>');
-  svg.push('<text x="'+(SVG_W/2)+'" y="228" text-anchor="middle" font-size="5.5" fill="'+P.zoneText+'" font-weight="600" letter-spacing="1">PEDANA / TERRAZZA</text>');
-
   MAP_SPOTS.forEach(function(spot) {
     var hasOrder = orders.some(function(o){return o.table===spot.id;});
     var isSel = selectedTable===spot.id;

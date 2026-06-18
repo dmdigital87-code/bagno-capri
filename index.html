@@ -1546,6 +1546,7 @@
           <button onclick="resizeSpot('w',1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↔+</button>
           <button onclick="resizeSpot('h',-1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↕−</button>
           <button onclick="resizeSpot('h',1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↕+</button>
+          <button onclick="rotateSpot()" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer;margin-left:4px">⟳</button>
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="createNewSpot()" style="flex:1;padding:8px 12px;background:white;color:var(--sea-light,#0a7);border:0;border-radius:6px;font-weight:600;cursor:pointer">+ Nuovo tavolo</button>
@@ -2337,6 +2338,22 @@ function moveSpotDrag(event) {
 function endSpotDrag(event) {
   if (!draggingSpotId) return;
   draggingSpotId = null;
+  renderTableGrid();
+}
+function rotateSpot() {
+  if (!editingMap || !selectedSpotForEdit) return;
+  var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
+  if (!spot) return;
+  var cx = spot.x + spot.w / 2;
+  var cy = spot.y + spot.h / 2;
+  var newW = spot.h;
+  var newH = spot.w;
+  spot.w = newW;
+  spot.h = newH;
+  spot.x = Math.round(cx - newW / 2);
+  spot.y = Math.round(cy - newH / 2);
+  spot.x = Math.max(0, Math.min(SVG_W - spot.w, spot.x));
+  spot.y = Math.max(0, Math.min(SVG_H - spot.h, spot.y));
   renderTableGrid();
 }
 function resizeSpot(dim, delta) {

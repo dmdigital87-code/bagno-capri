@@ -2281,28 +2281,50 @@ function updateMapEditStatus() {
     el.textContent = 'Tocca un tavolo per selezionarlo';
   }
 }
-function mapCanvasTap(event) {
-  if (!editingMap || !selectedSpotForEdit) return;
-  // Se il click è su un <g> figlio (un tavolo), selectTable se ne occupa
-  if (event.target && event.target.closest && event.target.closest('g')) return;
-
-  var svgEl = event.currentTarget;
+function svgPointFromEvent(event) {
+  var svgEl = document.getElementById('map-svg-root');
+  if (!svgEl) return null;
   var rect = svgEl.getBoundingClientRect();
-  var clientX = event.clientX != null ? event.clientX : (event.touches && event.touches[0] ? event.touches[0].clientX : null);
-  var clientY = event.clientY != null ? event.clientY : (event.touches && event.touches[0] ? event.touches[0].clientY : null);
-  if (clientX == null || clientY == null) return;
-  var svgX = ((clientX - rect.left) / rect.width) * SVG_W;
-  var svgY = ((clientY - rect.top) / rect.height) * SVG_H;
-
-  var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
+  var x = ((event.clientX - rect.left) / rect.width) * SVG_W;
+  var y = ((event.clientY - rect.top) / rect.height) * SVG_H;
+  return {x: x, y: y};
+}
+function startSpotDrag(event, id) {
+  if (!editingMap) return;
+  event.preventDefault();
+  draggingSpotId = id;
+  selectedSpotForEdit = id;
+  updateMapEditStatus();
+  try { event.currentTarget.setPointerCapture(event.pointerId); } catch(e) {}
+  event.currentTarget.onpointermove = function(ev){ moveSpotDrag(ev); };
+  event.currentTarget.onpointerup = function(ev){ endSpotDrag(ev); };
+  event.currentTarget.onpointercancel = function(ev){ endSpotDrag(ev); };
+}
+function moveSpotDrag(event) {
+  if (!editingMap || !draggingSpotId) return;
+  event.preventDefault();
+  var pt = svgPointFromEvent(event);
+  if (!pt) return;
+  var spot = MAP_SPOTS.find(function(s){return s.id === draggingSpotId;});
   if (!spot) return;
-  var newX = svgX - spot.w / 2;
-  var newY = svgY - spot.h / 2;
+  var newX = pt.x - spot.w / 2;
+  var newY = pt.y - spot.h / 2;
   newX = Math.max(0, Math.min(SVG_W - spot.w, newX));
   newY = Math.max(0, Math.min(SVG_H - spot.h, newY));
   spot.x = Math.round(newX);
   spot.y = Math.round(newY);
-
+  var r = document.getElementById('rect-' + spot.id);
+  if (r) { r.setAttribute('x', spot.x); r.setAttribute('y', spot.y); }
+  var t = document.getElementById('text-' + spot.id);
+  if (t) {
+    var fs = spot.label.length>6?6.5:spot.label.length>3?7.5:9;
+    t.setAttribute('x', spot.x + spot.w/2);
+    t.setAttribute('y', spot.y + spot.h/2 + fs*0.38);
+  }
+}
+function endSpotDrag(event) {
+  if (!draggingSpotId) return;
+  draggingSpotId = null;
   renderTableGrid();
 }
 
@@ -2445,6 +2467,7 @@ let mergeSelection = [];
 let mergedTables = {};
 let editingMap = false;
 let selectedSpotForEdit = null;
+let draggingSpotId = null;
 let currentCat = 'Tutti';
 let kitchenFilter = 'all';
 let nextId = menu.reduce((m,i)=>Math.max(m,i.id),0)+1;
@@ -2583,11 +2606,21 @@ function renderTableGrid() {
     zoneStroke: '#1f2530', zoneText: '#8a92a0',
     tableFree: '#1f2530', tableFreeStroke: 'rgba(255,122,61,0.25)', tableFreeText: '#f0f2f5'
   };
-  var svgOnclick = editingMap ? ' onclick="mapCanvasTap(event)"' : '';
-  var svg = ['<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;height:auto;font-family:Inter,-apple-system,sans-serif"'+svgOnclick+'>'];
+  var svgStyle = 'display:block;max-width:100%;height:auto;font-family:Inter,-apple-system,sans-serif';
+  if (editingMap) svgStyle += ';touch-action:none';
+  var svg = ['<svg id="map-svg-root" viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" xmlns="http://www.w3.org/2000/svg" style="'+svgStyle+'">'];
 
   svg.push('<defs><filter id="sh" x="-8%" y="-8%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,60,80,0.18)"/></filter></defs>');
   svg.push('<rect x="0" y="0" width="'+SVG_W+'" height="'+SVG_H+'" rx="16" fill="'+P.canvasBg+'"/>');
+  if (editingMap) {
+    var gridStep = 30;
+    for (var gx = gridStep; gx < SVG_W; gx += gridStep) {
+      svg.push('<line x1="'+gx+'" y1="0" x2="'+gx+'" y2="'+SVG_H+'" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>');
+    }
+    for (var gy = gridStep; gy < SVG_H; gy += gridStep) {
+      svg.push('<line x1="0" y1="'+gy+'" x2="'+SVG_W+'" y2="'+gy+'" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>');
+    }
+  }
   // Zone
   svg.push('<rect x="4" y="2" width="138" height="24" rx="6" fill="'+P.zoneBg+'" stroke="rgba(255,122,61,0.3)" stroke-width="1"/>');
   svg.push('<text x="75" y="15" text-anchor="middle" font-size="7" fill="'+P.zoneText+'" font-weight="600" letter-spacing="0.5">SPIAGGIA 1-2</text>');
@@ -2611,13 +2644,17 @@ function renderTableGrid() {
     else { fill=P.tableFree; stroke=P.tableFreeStroke; sw=1; }
     if (editingMap && spot.id === selectedSpotForEdit) { stroke = '#ffff00'; sw = 3; }
 
-    svg.push('<g onclick="selectTable(\''+spot.id+'\')" style="cursor:pointer">');
+    if (editingMap) {
+      svg.push('<g data-spot-id="'+spot.id+'" onpointerdown="startSpotDrag(event,\''+spot.id+'\')" style="cursor:move;touch-action:none">');
+    } else {
+      svg.push('<g onclick="selectTable(\''+spot.id+'\')" style="cursor:pointer">');
+    }
     if(isSel) svg.push('<rect x="'+(spot.x-2)+'" y="'+(spot.y-2)+'" width="'+(spot.w+4)+'" height="'+(spot.h+4)+'" rx="8" fill="none" stroke="#ff7a3d" stroke-width="2" opacity="0.6"/>');
-    svg.push('<rect x="'+spot.x+'" y="'+spot.y+'" width="'+spot.w+'" height="'+spot.h+'" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>');
+    svg.push('<rect id="rect-'+spot.id+'" x="'+spot.x+'" y="'+spot.y+'" width="'+spot.w+'" height="'+spot.h+'" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>');
 
     var fs = spot.label.length>6?6.5:spot.label.length>3?7.5:9;
     var tc = isSel?'#ffffff':(hasOrder?'#0e1218':P.tableFreeText);
-    svg.push('<text x="'+cx+'" y="'+(cy+fs*0.38)+'" text-anchor="middle" font-size="'+fs+'" fill="'+tc+'" font-weight="bold">'+spot.label+'</text>');
+    svg.push('<text id="text-'+spot.id+'" x="'+cx+'" y="'+(cy+fs*0.38)+'" text-anchor="middle" font-size="'+fs+'" fill="'+tc+'" font-weight="bold">'+spot.label+'</text>');
 
     if(hasOrder&&!isSel) {
       svg.push('<circle cx="'+(spot.x+spot.w-4)+'" cy="'+(spot.y+4)+'" r="5" fill="#0e1218"/>');

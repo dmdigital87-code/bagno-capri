@@ -263,3 +263,47 @@ Durante test potrebbero essere stati eliminati tavoli (es. SP4, Bancone X). Non 
 | Gestione tavoli elimina | ✅ FATTA (16 giu) |
 | Gestione tavoli crea+sposta | ⏳ Commit 3 in sessione futura |
 | Regole sicurezza Firebase | ⚠️ Sospeso da fine maggio (non urgente) |
+
+---
+
+## Gestione tavoli dinamica COMPLETATA + rifiniture (dal 2026-06-18/19)
+
+### Commit 3 completato in tutte le sue parti
+- Commit 3A (sposta tavoli): inizialmente tap-to-place, poi SOSTITUITO da drag in tempo reale
+- Commit 3A-bis: drag con Pointer Events (pointerdown/move/up) + setPointerCapture + touch-action:none per funzionare su touch (iPad/Android). Griglia di sfondo 30px come riferimento visivo (no snap). Variabili globali: editingMap, selectedSpotForEdit, draggingSpotId. SVG root ha id=map-svg-root. Ogni rect ha id=rect-{spotid}, ogni text id=text-{spotid}, mossi insieme durante il drag per fluidità. [`d97c169`]
+- Commit 3B (crea nuovo tavolo): bottone "+ Nuovo tavolo" nella barra edit. createNewSpot() chiede nome via prompt, crea spot con id='NEW'+Date.now() (univoco, mai riusa id eliminati), type:'custom', dimensione default 50x24, posizione centrale, nasce già selezionato. type:'custom' evita il prefisso ridondante in getSpotLabel (restituisce label puro). [`1cc6ba4`]
+- Commit 3C (ridimensiona): controlli ↔−/↔+/↕−/↕+ nella barra edit, visibili solo quando un tavolo è selezionato. resizeSpot(dim,delta) step 8 SVG units, limiti w:[30-120] h:[15-80], anti-sforamento dal bordo. [`0706609`]
+- Commit 3D (ruota 90°): bottone ⟳ nei controlli. rotateSpot() scambia w↔h mantenendo il centro (NO transform CSS, solo swap dimensioni). Clamp ai bordi. [`4e29e82`]
+
+### Rifiniture UX della modalità modifica mappa
+- Testo verticale automatico: se spot.h > spot.w il label si scrive ruotato -90° (transform rotate sul <text>), gestito sia nel render sia durante il drag (moveSpotDrag). Regola basata sulla FORMA, non su un flag. [`5bc9958`]
+- Barra controlli sticky: #map-edit-bar ha position:sticky;top:88px;z-index:50 — resta visibile in alto durante lo scroll della mappa (prima spariva e non si vedevano i controlli per i tavoli in basso). z-index:50 < header (100) così passa sotto l'header senza coprirlo. [`924a7e8`]
+
+### Mappa pulita
+- Rimosse le zone di sfondo decorative (4 etichette testo "SPIAGGIA 1-2/3-4", "INTERNO", "PEDANA/TERRAZZA" + 6 rettangoli sfondo zona) da renderTableGrid. La mappa ora mostra solo i tavoli su sfondo uniforme. Scelta coerente con la libertà di posizionamento (le zone fisse non corrispondevano più ai tavoli spostati). Il rect di sfondo generale del canvas (x=0 y=0) è stato MANTENUTO. [`fa4acf2`]
+
+### Scontrino testo ingrandito
+- bagno-print.js: nuova costante TALL=[GS,0x21,0x01] (altezza x2, larghezza normale → resta 48 car/riga, niente a capo strani).
+- Tutto il corpo dello scontrino (Bagno Capri, Coperti, Cliente, nomi piatti, rimozioni, extra, NOTE) passato da NORMAL a TALL.
+- Le intestazioni BIG (CUCINA/BAR, tavolo+numero) restano BIG (0x11) come prima.
+- IMPORTANTE: push(NORMAL) aggiunto prima di nl(4)+CUT per resettare la dimensione (stampante stateful: senza reset il taglio e lo scontrino successivo erediterebbero TALL).
+- [`1b9266c`]
+- TEST STAMPA FISICA NON ANCORA FATTO: da verificare al Capri con Android+RawBT. Controllare: testo più leggibile, nomi lunghi non vanno a capo, 3 scontrini tutti grandi, taglio pulito, secondo scontrino parte a dimensione giusta.
+
+### TASK CHIUSO
+- "ripristino tavoli eliminati in test": ora possibile con "+ Nuovo tavolo" (Commit 3B). Se servono i 28 originali: cancellare mmt_spots da localStorage o nodo Firebase, il default li ripristina.
+
+### TASK ANCORA APERTO
+- Ridondanza prefisso "Spiaggia Spiaggia"/"Pedana Pedana" in getSpotLabel per i tavoli ORIGINALI type spiaggia/pedana (i nuovi type:custom non hanno il problema). Fix: rimuovere i due if, sempre return spot.label. Da fare quando il proprietario rinomina la prima Spiaggia/Pedana originale.
+- Regole sicurezza Firebase (aperte da fine maggio, non urgente).
+
+### Stato richieste cliente: TUTTE COMPLETATE (in attesa solo test stampa)
+| Richiesta | Stato |
+|---|---|
+| Note cucina nascondibili | ✅ FATTA |
+| Nome cliente sul tavolo | ✅ FATTA |
+| Categorie menu | ✅ FATTA |
+| Riordino piatti menu | ✅ FATTA |
+| Tavoli: rinomina/elimina/sposta/crea/ridimensiona/ruota | ✅ FATTA |
+| Mappa pulita | ✅ FATTA |
+| Scontrino leggibile | ✅ FATTA (test stampa da fare) |

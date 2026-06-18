@@ -1540,6 +1540,13 @@
       </div>
       <div id="map-edit-bar" style="display:none;background:var(--coral,#ff5a00);color:white;padding:10px 14px;border-radius:10px;margin:8px 0;font-size:0.85rem;flex-direction:column;gap:8px">
         <div id="map-edit-status" style="font-weight:600">Tocca un tavolo per selezionarlo</div>
+        <div id="map-resize-controls" style="display:none;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:0.78rem;opacity:0.9">Dimensione:</span>
+          <button onclick="resizeSpot('w',-1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↔−</button>
+          <button onclick="resizeSpot('w',1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↔+</button>
+          <button onclick="resizeSpot('h',-1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↕−</button>
+          <button onclick="resizeSpot('h',1)" style="padding:6px 10px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:700;cursor:pointer">↕+</button>
+        </div>
         <div style="display:flex;gap:8px">
           <button onclick="createNewSpot()" style="flex:1;padding:8px 12px;background:white;color:var(--sea-light,#0a7);border:0;border-radius:6px;font-weight:600;cursor:pointer">+ Nuovo tavolo</button>
           <button onclick="exitEditMapMode()" style="flex:1;padding:8px 12px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:600;cursor:pointer">✅ Fatto</button>
@@ -2269,15 +2276,19 @@ function exitEditMapMode() {
   editingMap = false;
   selectedSpotForEdit = null;
   document.getElementById('map-edit-bar').style.display = 'none';
+  var rc = document.getElementById('map-resize-controls');
+  if (rc) rc.style.display = 'none';
   save();
   renderTableGrid();
 }
 function updateMapEditStatus() {
   var el = document.getElementById('map-edit-status');
+  var resizeCtrl = document.getElementById('map-resize-controls');
+  if (resizeCtrl) resizeCtrl.style.display = selectedSpotForEdit ? 'flex' : 'none';
   if (!el) return;
   if (selectedSpotForEdit) {
     var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
-    el.textContent = 'Selezionato: ' + (spot ? spot.label : '?') + '. Tocca dove vuoi metterlo.';
+    el.textContent = 'Selezionato: ' + (spot ? spot.label : '?') + '. Trascinalo o ridimensiona.';
   } else {
     el.textContent = 'Tocca un tavolo per selezionarlo';
   }
@@ -2326,6 +2337,24 @@ function moveSpotDrag(event) {
 function endSpotDrag(event) {
   if (!draggingSpotId) return;
   draggingSpotId = null;
+  renderTableGrid();
+}
+function resizeSpot(dim, delta) {
+  if (!editingMap || !selectedSpotForEdit) return;
+  var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
+  if (!spot) return;
+  var STEP = 8;
+  if (dim === 'w') {
+    var newW = spot.w + delta * STEP;
+    newW = Math.max(30, Math.min(120, newW));
+    if (spot.x + newW > SVG_W) spot.x = Math.max(0, SVG_W - newW);
+    spot.w = newW;
+  } else {
+    var newH = spot.h + delta * STEP;
+    newH = Math.max(15, Math.min(80, newH));
+    if (spot.y + newH > SVG_H) spot.y = Math.max(0, SVG_H - newH);
+    spot.h = newH;
+  }
   renderTableGrid();
 }
 function createNewSpot() {

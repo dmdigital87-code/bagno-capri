@@ -1538,6 +1538,12 @@
         <button class="btn-merge-cancel" onclick="cancelMerge()">✕ Annulla</button>
         <button class="btn-merge" onclick="confirmMerge()" id="btn-confirm-merge" disabled>🔗 Unisci</button>
       </div>
+      <div id="map-edit-bar" style="display:none;background:var(--coral,#ff5a00);color:white;padding:10px 14px;border-radius:10px;margin:8px 0;font-size:0.85rem;flex-direction:column;gap:8px">
+        <div id="map-edit-status" style="font-weight:600">Tocca un tavolo per selezionarlo</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="exitEditMapMode()" style="flex:1;padding:8px 12px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:600;cursor:pointer">✅ Fatto</button>
+        </div>
+      </div>
       <div class="map-canvas" id="map-canvas"></div>
     </div>
 
@@ -1696,6 +1702,7 @@
   <div style="background:var(--white,#fff);border-radius:14px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:var(--text)">
     <h2 style="margin:0 0 16px 0;font-size:1.2rem">🪑 Gestione tavoli</h2>
     <div style="font-size:0.85rem;opacity:0.7;margin-bottom:12px">Tocca ✏️ per rinominare un tavolo.</div>
+    <button onclick="enterEditMapMode()" style="width:100%;padding:10px;margin-bottom:12px;background:var(--sea-light,#5aa);color:#fff;border:0;border-radius:8px;font-weight:600;font-size:0.95rem;cursor:pointer">✏️ Modifica posizioni</button>
     <div id="spots-list" style="display:flex;flex-direction:column;gap:6px"></div>
     <button onclick="closeSpotsModal()" style="margin-top:20px;width:100%;padding:12px;background:var(--sand-dark);color:var(--text);border:0;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer">Chiudi</button>
   </div>
@@ -2248,6 +2255,57 @@ function deleteSpot(id) {
   renderTableGrid();
 }
 
+function enterEditMapMode() {
+  closeSpotsModal();
+  closeSettings();
+  editingMap = true;
+  selectedSpotForEdit = null;
+  document.getElementById('map-edit-bar').style.display = 'flex';
+  updateMapEditStatus();
+  renderTableGrid();
+}
+function exitEditMapMode() {
+  editingMap = false;
+  selectedSpotForEdit = null;
+  document.getElementById('map-edit-bar').style.display = 'none';
+  save();
+  renderTableGrid();
+}
+function updateMapEditStatus() {
+  var el = document.getElementById('map-edit-status');
+  if (!el) return;
+  if (selectedSpotForEdit) {
+    var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
+    el.textContent = 'Selezionato: ' + (spot ? spot.label : '?') + '. Tocca dove vuoi metterlo.';
+  } else {
+    el.textContent = 'Tocca un tavolo per selezionarlo';
+  }
+}
+function mapCanvasTap(event) {
+  if (!editingMap || !selectedSpotForEdit) return;
+  // Se il click è su un <g> figlio (un tavolo), selectTable se ne occupa
+  if (event.target && event.target.closest && event.target.closest('g')) return;
+
+  var svgEl = event.currentTarget;
+  var rect = svgEl.getBoundingClientRect();
+  var clientX = event.clientX != null ? event.clientX : (event.touches && event.touches[0] ? event.touches[0].clientX : null);
+  var clientY = event.clientY != null ? event.clientY : (event.touches && event.touches[0] ? event.touches[0].clientY : null);
+  if (clientX == null || clientY == null) return;
+  var svgX = ((clientX - rect.left) / rect.width) * SVG_W;
+  var svgY = ((clientY - rect.top) / rect.height) * SVG_H;
+
+  var spot = MAP_SPOTS.find(function(s){return s.id === selectedSpotForEdit;});
+  if (!spot) return;
+  var newX = svgX - spot.w / 2;
+  var newY = svgY - spot.h / 2;
+  newX = Math.max(0, Math.min(SVG_W - spot.w, newX));
+  newY = Math.max(0, Math.min(SVG_H - spot.h, newY));
+  spot.x = Math.round(newX);
+  spot.y = Math.round(newY);
+
+  renderTableGrid();
+}
+
 function saveChangePin() {
   var c=document.getElementById('cp-current').value, n=document.getElementById('cp-new').value, cf=document.getElementById('cp-confirm').value, s=getStoredPin();
   if(c!==s){document.getElementById('cp-error').textContent='PIN attuale errato';return;}
@@ -2385,6 +2443,8 @@ let cliente = '';
 let mergeMode = false;
 let mergeSelection = [];
 let mergedTables = {};
+let editingMap = false;
+let selectedSpotForEdit = null;
 let currentCat = 'Tutti';
 let kitchenFilter = 'all';
 let nextId = menu.reduce((m,i)=>Math.max(m,i.id),0)+1;
@@ -2523,7 +2583,8 @@ function renderTableGrid() {
     zoneStroke: '#1f2530', zoneText: '#8a92a0',
     tableFree: '#1f2530', tableFreeStroke: 'rgba(255,122,61,0.25)', tableFreeText: '#f0f2f5'
   };
-  var svg = ['<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;height:auto;font-family:Inter,-apple-system,sans-serif">'];
+  var svgOnclick = editingMap ? ' onclick="mapCanvasTap(event)"' : '';
+  var svg = ['<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;height:auto;font-family:Inter,-apple-system,sans-serif"'+svgOnclick+'>'];
 
   svg.push('<defs><filter id="sh" x="-8%" y="-8%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,60,80,0.18)"/></filter></defs>');
   svg.push('<rect x="0" y="0" width="'+SVG_W+'" height="'+SVG_H+'" rx="16" fill="'+P.canvasBg+'"/>');
@@ -2548,6 +2609,7 @@ function renderTableGrid() {
     if(isSel) { fill='#ff7a3d'; stroke='#ffffff'; sw=2.5; }
     else if(hasOrder) { fill='#2ee07e'; stroke='#2ee07e'; sw=1; }
     else { fill=P.tableFree; stroke=P.tableFreeStroke; sw=1; }
+    if (editingMap && spot.id === selectedSpotForEdit) { stroke = '#ffff00'; sw = 3; }
 
     svg.push('<g onclick="selectTable(\''+spot.id+'\')" style="cursor:pointer">');
     if(isSel) svg.push('<rect x="'+(spot.x-2)+'" y="'+(spot.y-2)+'" width="'+(spot.w+4)+'" height="'+(spot.h+4)+'" rx="8" fill="none" stroke="#ff7a3d" stroke-width="2" opacity="0.6"/>');
@@ -2585,6 +2647,12 @@ function renderTableGrid() {
 }
 
 function selectTable(id) {
+  if (editingMap) {
+    selectedSpotForEdit = id;
+    updateMapEditStatus();
+    renderTableGrid();
+    return;
+  }
   if(mergeMode) {
     var idx=mergeSelection.indexOf(id);
     if(idx>=0) mergeSelection.splice(idx,1); else mergeSelection.push(id);

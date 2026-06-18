@@ -25,7 +25,7 @@
 
   var ESC = 0x1B, GS = 0x1D;
   var INIT = [ESC,0x40], CENTER=[ESC,0x61,1], LEFT=[ESC,0x61,0];
-  var BIG=[GS,0x21,0x11], NORMAL=[GS,0x21,0x00];
+  var BIG=[GS,0x21,0x11], TALL=[GS,0x21,0x01], NORMAL=[GS,0x21,0x00];
   var BOLD_ON=[ESC,0x45,1], BOLD_OFF=[ESC,0x45,0];
   var CUT=[GS,0x56,65,0];                      // GS V 65 0 (funzione B, testato)
   var LINE='------------------------------------------------';
@@ -39,21 +39,21 @@
 
   function buildTicket(order,label,items){
     var b=[];function push(a){b=b.concat(a);}
-    push(INIT);push(CENTER);push(BIG);push(txt(label));push(nl());push(NORMAL);
+    push(INIT);push(CENTER);push(BIG);push(txt(label));push(nl());push(TALL);
     push(txt('Bagno Capri'));push(nl());push(LEFT);push(txt(LINE));push(nl());
     push(BIG);var head=spotLabel(order.table);if(order.orderNum)head+='  #'+order.orderNum;
-    push(txt(head));push(nl());push(NORMAL);
+    push(txt(head));push(nl());push(TALL);
     push(txt('Coperti: '+(order.coperti||'-')+'   '+hhmm(order.time)));push(nl());
-    if(order.cliente&&String(order.cliente).trim()){push(BOLD_ON);push(txt('Cliente: '+order.cliente));push(nl());push(BOLD_OFF);}
+    if(order.cliente&&String(order.cliente).trim()){push(TALL);push(BOLD_ON);push(txt('Cliente: '+order.cliente));push(nl());push(BOLD_OFF);}
     push(txt(LINE));push(nl());
     for(var i=0;i<items.length;i++){var it=items[i];
-      push(BOLD_ON);push(txt((it.qty||1)+'x '+(it.name||'')));push(nl());push(BOLD_OFF);
-      if(it.removed&&it.removed.length)for(var r=0;r<it.removed.length;r++){push(txt('   - '+it.removed[r]));push(nl());}
-      if(it.extra&&it.extra.length)for(var e=0;e<it.extra.length;e++){push(txt('   + '+it.extra[e]));push(nl());}
+      push(TALL);push(BOLD_ON);push(txt((it.qty||1)+'x '+(it.name||'')));push(nl());push(BOLD_OFF);
+      if(it.removed&&it.removed.length)for(var r=0;r<it.removed.length;r++){push(TALL);push(txt('   - '+it.removed[r]));push(nl());}
+      if(it.extra&&it.extra.length)for(var e=0;e<it.extra.length;e++){push(TALL);push(txt('   + '+it.extra[e]));push(nl());}
     }
     push(txt(LINE));push(nl());
-    if(order.note&&String(order.note).trim()){push(BOLD_ON);push(txt('NOTE: '+order.note));push(nl());push(BOLD_OFF);push(txt(LINE));push(nl());}
-    push(nl(4));push(CUT);return b;
+    if(order.note&&String(order.note).trim()){push(TALL);push(BOLD_ON);push(txt('NOTE: '+order.note));push(nl());push(BOLD_OFF);push(txt(LINE));push(nl());}
+    push(NORMAL);push(nl(4));push(CUT);return b;
   }
   // Quante copie del ticket CUCINA stampare (BAR resta sempre 1).
   var CUCINA_COPIE = 2;

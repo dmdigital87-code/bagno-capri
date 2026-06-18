@@ -2331,8 +2331,15 @@ function moveSpotDrag(event) {
   var t = document.getElementById('text-' + spot.id);
   if (t) {
     var fs = spot.label.length>6?6.5:spot.label.length>3?7.5:9;
-    t.setAttribute('x', spot.x + spot.w/2);
-    t.setAttribute('y', spot.y + spot.h/2 + fs*0.38);
+    var tcx = spot.x + spot.w/2;
+    var tcy = spot.y + spot.h/2;
+    t.setAttribute('x', tcx);
+    t.setAttribute('y', tcy + fs*0.38);
+    if (spot.h > spot.w) {
+      t.setAttribute('transform', 'rotate(-90 '+tcx+' '+tcy+')');
+    } else {
+      t.removeAttribute('transform');
+    }
   }
 }
 function endSpotDrag(event) {
@@ -2724,7 +2731,8 @@ function renderTableGrid() {
 
     var fs = spot.label.length>6?6.5:spot.label.length>3?7.5:9;
     var tc = isSel?'#ffffff':(hasOrder?'#0e1218':P.tableFreeText);
-    svg.push('<text id="text-'+spot.id+'" x="'+cx+'" y="'+(cy+fs*0.38)+'" text-anchor="middle" font-size="'+fs+'" fill="'+tc+'" font-weight="bold">'+spot.label+'</text>');
+    var txtTransform = (spot.h > spot.w) ? ' transform="rotate(-90 '+cx+' '+cy+')"' : '';
+    svg.push('<text id="text-'+spot.id+'" x="'+cx+'" y="'+(cy+fs*0.38)+'" text-anchor="middle" font-size="'+fs+'" fill="'+tc+'" font-weight="bold"'+txtTransform+'>'+spot.label+'</text>');
 
     if(hasOrder&&!isSel) {
       svg.push('<circle cx="'+(spot.x+spot.w-4)+'" cy="'+(spot.y+4)+'" r="5" fill="#0e1218"/>');

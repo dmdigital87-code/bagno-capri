@@ -1541,6 +1541,7 @@
       <div id="map-edit-bar" style="display:none;background:var(--coral,#ff5a00);color:white;padding:10px 14px;border-radius:10px;margin:8px 0;font-size:0.85rem;flex-direction:column;gap:8px">
         <div id="map-edit-status" style="font-weight:600">Tocca un tavolo per selezionarlo</div>
         <div style="display:flex;gap:8px">
+          <button onclick="createNewSpot()" style="flex:1;padding:8px 12px;background:white;color:var(--sea-light,#0a7);border:0;border-radius:6px;font-weight:600;cursor:pointer">+ Nuovo tavolo</button>
           <button onclick="exitEditMapMode()" style="flex:1;padding:8px 12px;background:white;color:var(--coral,#ff5a00);border:0;border-radius:6px;font-weight:600;cursor:pointer">✅ Fatto</button>
         </div>
       </div>
@@ -2325,6 +2326,29 @@ function moveSpotDrag(event) {
 function endSpotDrag(event) {
   if (!draggingSpotId) return;
   draggingSpotId = null;
+  renderTableGrid();
+}
+function createNewSpot() {
+  if (!editingMap) return;
+  var name = prompt('Nome del nuovo tavolo:', '');
+  if (!name) return;
+  name = name.trim();
+  if (!name) return;
+  var defaultW = 50, defaultH = 24;
+  var newId = 'NEW' + Date.now();
+  var newSpot = {
+    id: newId,
+    label: name,
+    type: 'custom',
+    x: Math.round((SVG_W - defaultW) / 2),
+    y: Math.round((SVG_H - defaultH) / 2),
+    w: defaultW,
+    h: defaultH,
+    shape: 'rect'
+  };
+  MAP_SPOTS.push(newSpot);
+  selectedSpotForEdit = newId;
+  updateMapEditStatus();
   renderTableGrid();
 }
 

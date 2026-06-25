@@ -235,16 +235,8 @@ Bottone ⚙️ Impostazioni → sezione "Gestione tavoli" → bottone "🪑 Gest
 - `deleteSpot(id)`: blocca se `orders.some(o.table===id && o.status==='pending')`; altrimenti conferma + filter MAP_SPOTS + save + render
 - `getSpotLabel` modificato con fallback `id || '?'` per spot eliminati (gli ordini storici di tavoli cancellati mostrano l'id grezzo)
 
-### TASK APERTO: ridondanza prefisso in getSpotLabel
-`getSpotLabel` fa:
-```
-if(spot.type==='spiaggia') return 'Spiaggia '+spot.label;
-if(spot.type==='pedana') return 'Pedana '+spot.label;
-```
-Con label originali "Spiaggia 1", "Pedana 1", ecc. il prefisso causa duplicazione "Spiaggia Spiaggia 1". Funziona finché non si rinomina.
-Se proprietario rinomina "Spiaggia 1" in "Veranda", il risultato diventa "Spiaggia Veranda" (confondente).
-FIX semplice: rimuovere i due `if`, usare sempre `return spot.label`.
-Da affrontare al Commit 3 (Crea+Sposta) quando si rivede la logica dei tipi, o appena il proprietario rinomina la prima Spiaggia/Pedana e si lamenta.
+### TASK CHIUSO: ridondanza prefisso in getSpotLabel
+Risolto in commit `a514e5c` (25 giu 2026). I due `if` di prefisso rimossi da `getSpotLabel`. Label pedana aggiornati da `'P12'` a `'Pedana 12'` nel default + migrazione idempotente `migratePedanaLabels()` per il localStorage live. Vedi sezione "Fix scontrino nome tavolo" più avanti.
 
 ### TASK APERTO: ripristino tavoli eliminati in test
 Durante test potrebbero essere stati eliminati tavoli (es. SP4, Bancone X). Non è ancora possibile ricrearli (Crea sarà nel Commit 3). Se serve recuperare i tavoli al loro stato originale 28-spot: cancellare `mmt_spots` da localStorage del dispositivo OPPURE cancellare il nodo `bagno_capri/spots` da Firebase Console. Il fallback al default ripristina i 28 originali.
@@ -294,7 +286,6 @@ Durante test potrebbero essere stati eliminati tavoli (es. SP4, Bancone X). Non 
 - "ripristino tavoli eliminati in test": ora possibile con "+ Nuovo tavolo" (Commit 3B). Se servono i 28 originali: cancellare mmt_spots da localStorage o nodo Firebase, il default li ripristina.
 
 ### TASK ANCORA APERTO
-- Ridondanza prefisso "Spiaggia Spiaggia"/"Pedana Pedana" in getSpotLabel per i tavoli ORIGINALI type spiaggia/pedana (i nuovi type:custom non hanno il problema). Fix: rimuovere i due if, sempre return spot.label. Da fare quando il proprietario rinomina la prima Spiaggia/Pedana originale.
 - Regole sicurezza Firebase (aperte da fine maggio, non urgente).
 
 ### Stato richieste cliente: TUTTE COMPLETATE (in attesa solo test stampa)
@@ -307,3 +298,37 @@ Durante test potrebbero essere stati eliminati tavoli (es. SP4, Bancone X). Non 
 | Tavoli: rinomina/elimina/sposta/crea/ridimensiona/ruota | ✅ FATTA |
 | Mappa pulita | ✅ FATTA |
 | Scontrino leggibile | ✅ FATTA (test stampa da fare) |
+
+---
+
+## Fix scontrino nome tavolo (dal 2026-06-25)
+
+### Problema risolto
+Lo scontrino stampava l'id grezzo `"NEW1781818233535"` per i tavoli creati con `createNewSpot()`, e `"Spiaggia Spiaggia 1"` per i tavoli spiaggia originali.
+
+### Causa
+`bagno-print.js` usava la propria `spotLabel()` locale (riga 35) che non conosce `MAP_SPOTS`: lavorava solo sulla prima lettera dell'id (`T` → "Tavolo", `O` → "Ombrellone", tutto il resto → id grezzo). Non chiamava mai `getSpotLabel()` di `index.html`.
+
+### Fix (commit `a514e5c`)
+Tre modifiche coordinate:
+
+1. **`bagno-print.js`** — `buildTicket` usa ora `window.getSpotLabel(order.table)` con fallback alla `spotLabel` locale:
+   ```js
+   var head = (typeof window!=='undefined' && typeof window.getSpotLabel==='function')
+     ? window.getSpotLabel(order.table) : spotLabel(order.table);
+   ```
+   `spotLabel` locale resta come safety net ma non dovrebbe mai essere necessaria.
+
+2. **`getSpotLabel()` in `index.html`** — rimossi i due `if` di prefisso automatico (`spiaggia`/`pedana`). Ora restituisce sempre `spot.label` puro. `getSpotLabel` è global (`window.getSpotLabel`) ed è raggiungibile dall'IIFE di `bagno-print.js`.
+
+3. **Label pedana aggiornati** — nel default `MAP_SPOTS` i 12 spot `type:'pedana'` avevano label corti (`'P12'`). Aggiornati a `'Pedana 12'` ecc. Aggiunta migrazione idempotente `migratePedanaLabels()` (IIFE subito dopo la definizione di `MAP_SPOTS`) per aggiornare il localStorage live dei dispositivi esistenti. Il regex `/^P\d+$/` garantisce idempotenza: dopo la prima esecuzione i label non matchano più.
+
+### Risultato sullo scontrino
+| Tavolo | Prima | Dopo |
+|---|---|---|
+| Tavolo custom "Veranda" | `NEW1781818...` | `Veranda` |
+| Spiaggia 1 | `Spiaggia Spiaggia 1` | `Spiaggia 1` |
+| Pedana 12 | `Pedana P12` | `Pedana 12` |
+
+### Test da fare
+Test stampa fisica sull'Android al banco (stesso test da fare già per scontrino ingrandito): verificare nome tavolo leggibile per spiaggia, pedana e tavolo custom.

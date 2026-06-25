@@ -2567,19 +2567,31 @@ let MAP_SPOTS = JSON.parse(localStorage.getItem('mmt_spots')||'null') || [
   {id:'I5',label:'int 5',type:'interno',x:244,y:52,w:58,h:58,shape:'rect'},
   {id:'I2',label:'int 2',type:'interno',x:90,y:164,w:58,h:58,shape:'rect'},
   {id:'I1',label:'int 1',type:'interno',x:154,y:164,w:58,h:58,shape:'rect'},
-  {id:'P12',label:'P12',type:'pedana',x:6,y:278,w:274,h:34,shape:'rect'},
-  {id:'P11',label:'P11',type:'pedana',x:6,y:318,w:134,h:34,shape:'rect'},
-  {id:'P1',label:'P1',type:'pedana',x:146,y:318,w:134,h:34,shape:'rect'},
-  {id:'P10',label:'P10',type:'pedana',x:6,y:358,w:134,h:34,shape:'rect'},
-  {id:'P2',label:'P2',type:'pedana',x:146,y:358,w:134,h:34,shape:'rect'},
-  {id:'P9',label:'P9',type:'pedana',x:6,y:398,w:134,h:34,shape:'rect'},
-  {id:'P3',label:'P3',type:'pedana',x:146,y:398,w:134,h:34,shape:'rect'},
-  {id:'P8',label:'P8',type:'pedana',x:6,y:438,w:134,h:34,shape:'rect'},
-  {id:'P4',label:'P4',type:'pedana',x:146,y:438,w:134,h:34,shape:'rect'},
-  {id:'P7',label:'P7',type:'pedana',x:6,y:478,w:134,h:34,shape:'rect'},
-  {id:'P5',label:'P5',type:'pedana',x:146,y:478,w:134,h:34,shape:'rect'},
-  {id:'P6',label:'P6',type:'pedana',x:6,y:518,w:274,h:34,shape:'rect'},
+  {id:'P12',label:'Pedana 12',type:'pedana',x:6,y:278,w:274,h:34,shape:'rect'},
+  {id:'P11',label:'Pedana 11',type:'pedana',x:6,y:318,w:134,h:34,shape:'rect'},
+  {id:'P1',label:'Pedana 1',type:'pedana',x:146,y:318,w:134,h:34,shape:'rect'},
+  {id:'P10',label:'Pedana 10',type:'pedana',x:6,y:358,w:134,h:34,shape:'rect'},
+  {id:'P2',label:'Pedana 2',type:'pedana',x:146,y:358,w:134,h:34,shape:'rect'},
+  {id:'P9',label:'Pedana 9',type:'pedana',x:6,y:398,w:134,h:34,shape:'rect'},
+  {id:'P3',label:'Pedana 3',type:'pedana',x:146,y:398,w:134,h:34,shape:'rect'},
+  {id:'P8',label:'Pedana 8',type:'pedana',x:6,y:438,w:134,h:34,shape:'rect'},
+  {id:'P4',label:'Pedana 4',type:'pedana',x:146,y:438,w:134,h:34,shape:'rect'},
+  {id:'P7',label:'Pedana 7',type:'pedana',x:6,y:478,w:134,h:34,shape:'rect'},
+  {id:'P5',label:'Pedana 5',type:'pedana',x:146,y:478,w:134,h:34,shape:'rect'},
+  {id:'P6',label:'Pedana 6',type:'pedana',x:6,y:518,w:274,h:34,shape:'rect'},
 ];
+(function migratePedanaLabels(){
+  var changed = false;
+  MAP_SPOTS.forEach(function(s){
+    if (s.type==='pedana' && /^P\d+$/.test(s.label)) {
+      s.label = 'Pedana ' + s.label.slice(1);
+      changed = true;
+    }
+  });
+  if (changed) {
+    try { if (typeof _writeLocal==='function') _writeLocal(); } catch(e){}
+  }
+})();
 const SVG_W=310,SVG_H=562;
 
 function getSpotLabel(id) {
@@ -2587,8 +2599,6 @@ function getSpotLabel(id) {
   if(String(id).startsWith('ASP-')) return '🛍️ Asporto #'+id.replace('ASP-','');
   var spot = MAP_SPOTS.find(s=>s.id===id);
   if(!spot) return id || '?';
-  if(spot.type==='spiaggia') return 'Spiaggia '+spot.label;
-  if(spot.type==='pedana') return 'Pedana '+spot.label;
   return spot.label;
 }
 

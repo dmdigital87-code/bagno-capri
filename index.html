@@ -1426,6 +1426,7 @@
           if (data.menu) { menu = data.menu; save(false); renderAll(); }
           if (data.categories) { categories = data.categories; localStorage.setItem('mmt_categories', JSON.stringify(categories)); }
           if (data.spots) { MAP_SPOTS = data.spots; localStorage.setItem('mmt_spots', JSON.stringify(MAP_SPOTS)); if (typeof renderTableGrid === 'function') renderTableGrid(); }
+          if (data.merged) { mergedTables = data.merged; localStorage.setItem('mmt_merged', JSON.stringify(mergedTables)); if (typeof renderTableGrid === 'function') renderTableGrid(); }
           if (data.orders) { orders = data.orders; save(false); renderAll(); }
           if (data.settings) { localStorage.setItem('bc_settings', JSON.stringify(data.settings)); applyKitchenNotesVisibility(); }
           // NB: data.history NON è più letto. La history è locale per dispositivo
@@ -2541,7 +2542,7 @@ let coperti = 0;
 let cliente = '';
 let mergeMode = false;
 let mergeSelection = [];
-let mergedTables = {};
+let mergedTables = JSON.parse(localStorage.getItem('mmt_merged')||'null') || {};
 let editingMap = false;
 let selectedSpotForEdit = null;
 let draggingSpotId = null;
@@ -2629,6 +2630,7 @@ function _writeLocal() {
   localStorage.setItem('mmt_menu', JSON.stringify(menu));
   localStorage.setItem('mmt_categories', JSON.stringify(categories));
   localStorage.setItem('mmt_spots', JSON.stringify(MAP_SPOTS));
+  localStorage.setItem('mmt_merged', JSON.stringify(mergedTables));
   localStorage.setItem('mmt_orders', JSON.stringify(orders));
   localStorage.setItem('mmt_history', JSON.stringify(history));
 }
@@ -2660,7 +2662,7 @@ function save(syncToFb=true) {
     window._fbWriting=true;
     // NB: history NON è più sincronizzata su Firebase per evitare bandwidth bloat.
     // Ogni dispositivo mantiene la propria history locale; l'archivio completo è su Google Sheets.
-    window.fbSave({menu,orders,categories,spots:MAP_SPOTS});
+    window.fbSave({menu,orders,categories,spots:MAP_SPOTS,merged:mergedTables});
     setTimeout(()=>{window._fbWriting=false;},2000);
   }
 }
@@ -2824,6 +2826,7 @@ function confirmMerge() {
   var labels=mergeSelection.map(function(id){var sp=MAP_SPOTS.find(function(s){return s.id===id;});return sp?sp.label:id;});
   var mergedId=labels.join('+');
   mergedTables[mergedId]=[].concat(mergeSelection);
+  save();
   cancelMerge();
   selectedTable=mergedId;coperti=0;
   document.getElementById('coperti-val').textContent='0';
@@ -2833,6 +2836,7 @@ function confirmMerge() {
 function splitTable(mid) {
   if(!confirm('Separare i tavoli '+mid+'?')) return;
   delete mergedTables[mid];
+  save();
   if(selectedTable===mid){selectedTable=null;cart=[];coperti=0;}
   renderTableGrid();renderCart();
 }

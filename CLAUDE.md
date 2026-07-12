@@ -332,3 +332,39 @@ Tre modifiche coordinate:
 
 ### Test da fare
 Test stampa fisica sull'Android al banco (stesso test da fare già per scontrino ingrandito): verificare nome tavolo leggibile per spiaggia, pedana e tavolo custom.
+
+---
+
+## Sessione 25 giugno 2026 — Fix scontrino, fix merge, modifica ordine cucina
+
+### Fix nome tavolo sullo scontrino (bug id "NEW..." grezzo)
+- CAUSA: bagno-print.js usava la sua spotLabel() locale che guardava solo la prima lettera dell'id (T→Tavolo, O→Ombrellone). Per i tavoli nuovi con id "NEW..." (creati con "+ Nuovo tavolo") stampava l'id grezzo.
+- FIX: bagno-print.js ora usa window.getSpotLabel(order.table) (la funzione completa di index.html che conosce MAP_SPOTS), con fallback alla spotLabel locale. [a514e5c]
+- BONUS: rimossa la ridondanza prefisso in getSpotLabel (i due if type==='spiaggia'/'pedana'). Ora restituisce sempre spot.label puro.
+- MIGRAZIONE pedana: i label pedana erano "P12" (codice corto) e contavano sul prefisso. Aggiornati nel default a "Pedana 12" ecc. + IIFE migratePedanaLabels() idempotente (/^P\d+$/) che aggiorna i label live nel localStorage al caricamento.
+- Risultato scontrino: "Pedana 12" (non più "Pedana P12"), "Spiaggia 1" (non più "Spiaggia Spiaggia 1"), nomi custom corretti (non più "NEW...").
+
+### Fix merge tavoli non persistito
+- CAUSA: mergedTables (i tavoli uniti) viveva solo in RAM, mai salvato. Dopo refresh o su altro dispositivo il merge spariva, l'ordine restava orfano legato a un tavolo unito inesistente, impossibile aggiungere portate.
+- FIX: persistenza di mergedTables come già fatto per categories/spots: caricato da localStorage (mmt_merged), salvato in _writeLocal + fbSave (chiave firebase "merged"), letto dal listener (data.merged), save() chiamato in confirmMerge() e splitTable(). [566f523]
+
+### Modifica ordine già inviato in cucina (feature nuova)
+- Bottone "✏️ Modifica" nelle card cucina (solo ordini pending).
+- Flusso: ricarica l'ordine nel carrello (items/note/coperti/cliente), rimuove il vecchio dagli attivi, il cameriere modifica liberamente, "Invia in Cucina" crea l'ordine corretto MANTENENDO sessionId e orderNum originali (è una correzione, non nuova portata), con flag modificato:true, ristampa scontrino con "*** MODIFICATO ***" in BIG.
+- Variabile globale editingOrder = {original, id, sessionId, orderNum}.
+- GUARDIE di sicurezza: (1) blocco se carrello già pieno; (2) closeCart durante modifica ripristina l'ordine originale (non lo perde); (3) selectTable bloccato durante modifica (no invio al tavolo sbagliato).
+- bagno-print.js: dicitura "*** MODIFICATO ***" centrata BIG+BOLD dopo l'header tavolo se order.modificato.
+- Funzioni nuove: editOrder(id), updateEditingBanner(). Modificati: sendOrder (riusa sessionId/orderNum se editingOrder), closeCart (ripristino), selectTable (guardia). [6034352]
+
+### TASK APERTI aggiornati
+- history[] non ripulita dopo una modifica ordine: resta un record vecchio "in-corso" oltre al nuovo. Preesistente, non è rischio operativo, sistemare con calma.
+- Ridondanza prefisso getSpotLabel: CHIUSA con questa sessione.
+- Regole sicurezza Firebase: ancora aperta (non urgente).
+
+### RIFLESSIONE ARCHITETTURALE (importante per prodotto futuro)
+Pattern ricorrente emerso in stagione: l'app è nata come prototipo "tutto in RAM, un dispositivo". La stagione reale (iPad camerieri + Android banco) ha fatto emergere in sequenza i pezzi di stato NON persistiti: categorie, spots, merge, e la gestione ordini. Per il prodotto vendibile futuro, l'architettura deve partire da "stato condiviso persistito e sincronizzato di DEFAULT", non rincorrere ogni stato dopo che un cliente ci sbatte contro. Da approfondire in una sessione di design fuori stagione.
+
+### Test in attesa (responso proprietario 26 giugno)
+- Stampa scontrino: nomi tavolo corretti, "MODIFICATO" visibile, testo grande leggibile.
+- Merge multi-dispositivo: tavolo unito riapribile da altro dispositivo.
+- Modifica ordine: flusso completo + annulla senza perdere l'ordine.

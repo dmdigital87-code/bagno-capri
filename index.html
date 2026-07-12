@@ -773,6 +773,8 @@
   .btn-ready:hover { background:#246642; }
   .btn-cancel-order { padding:10px 14px;background:var(--sand);color:var(--text-muted);border:1px solid var(--sand-dark);border-radius:8px;font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;font-weight:500;font-size:0.85rem;cursor:pointer;transition:all 0.2s; }
   .btn-cancel-order:hover { background:#FDECEA;color:var(--coral);border-color:var(--coral); }
+  .btn-edit-order { padding:10px 14px;background:var(--gold);color:white;border:none;border-radius:8px;font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.2s; }
+  .btn-edit-order:hover { opacity:0.85; }
   .no-orders { grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted); }
   .no-orders-icon { font-size:4rem;margin-bottom:12px;opacity:0.4; }
 
@@ -903,7 +905,7 @@
   }
 
   @media print {
-    header,.filter-btn,.btn-ready,.btn-cancel-order { display:none; }
+    header,.filter-btn,.btn-ready,.btn-cancel-order,.btn-edit-order { display:none; }
     .view { display:block !important; }
     .order-card { break-inside:avoid; }
   }
@@ -1504,7 +1506,7 @@
     </div>
     <div style="padding:6px 8px 8px;overflow:hidden">
       <nav class="nav-tabs">
-        <button class="nav-tab active" onclick="showView('bar',this)">🍽️ Bar / Ordini</button>
+        <button class="nav-tab active" id="tab-bar" onclick="showView('bar',this)">🍽️ Bar / Ordini</button>
         <button class="nav-tab" onclick="showView('cucina',this)" id="tab-cucina">🔥 Cucina <span class="badge" id="kitchen-badge" style="display:none">0</span></button>
         <button class="nav-tab" onclick="showView('menu',this)">📋 Menu</button>
       </nav>
@@ -1613,6 +1615,7 @@
               <span style="font-size:0.78rem;color:var(--text-muted);font-weight:700;text-transform:uppercase">TOTALE TAVOLO</span>
               <span id="cart-total-all" style="font-size:1.15rem;font-weight:800;color:var(--gold)">€ 0,00</span>
             </div>
+            <div id="editing-banner" style="display:none;padding:8px 12px;background:#c9954a;color:#fff;font-size:0.8rem;font-weight:600;text-align:center;border-radius:8px;margin-bottom:8px">✏️ Stai modificando un ordine già inviato</div>
             <button class="btn-send" id="btn-invia" onclick="sendOrder()" disabled style="margin-bottom:8px">🚀 Invia in Cucina</button>
             <button id="btn-paga-cart" onclick="openPagaModal()" style="display:none;width:100%;padding:12px;background:var(--gold);color:white;border:none;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer">💳 Paga &amp; Libera Tavolo</button>
           </div>
@@ -2540,6 +2543,7 @@ let cart = [];
 let selectedTable = null;
 let coperti = 0;
 let cliente = '';
+let editingOrder = null;  // {original, id, sessionId, orderNum} dell'ordine in modifica, o null
 let mergeMode = false;
 let mergeSelection = [];
 let mergedTables = JSON.parse(localStorage.getItem('mmt_merged')||'null') || {};
@@ -2773,6 +2777,10 @@ function selectTable(id) {
     if(idx>=0) mergeSelection.splice(idx,1); else mergeSelection.push(id);
     updateMergeBar(); renderTableGrid(); return;
   }
+  if (editingOrder && id !== selectedTable) {
+    alert('Stai modificando un ordine.\n\nTermina la modifica (Invia in Cucina) o annullala (chiudi il carrello) prima di selezionare un altro tavolo.');
+    return;
+  }
   selectedTable=id; coperti=0;
   document.getElementById('coperti-val').textContent='0';
   var activeOrders_pre=orders.filter(function(o){return o.table===id&&o.status==='pending';})
@@ -2803,6 +2811,13 @@ function selectTable(id) {
 }
 
 function closeCart() {
+  if (editingOrder) {
+    if (!confirm('Annullare la modifica?\n\nL\'ordine tornerà com\'era prima.')) return;
+    orders.push(editingOrder.original);
+    editingOrder = null;
+    updateEditingBanner();
+    save(); renderKitchen(); renderTableGrid();
+  }
   selectedTable=null;cart=[];coperti=0;cliente='';
   var cp=document.getElementById('cart-panel');if(cp) cp.classList.remove('visible');
   document.getElementById('cart-table-label').textContent='—';
@@ -2973,12 +2988,17 @@ function sendOrder() {
   var existing=orders.filter(function(o){return o.table===selectedTable&&o.status!=='annullato';});
   var sessionId=existing.length>0?(existing[0].sessionId||existing[0].id):Date.now();
   var orderNum=existing.filter(function(o){return o.status!=='annullato';}).length+1;
-  var order={id:Date.now(),sessionId:sessionId,orderNum:orderNum,table:selectedTable,coperti:coperti,cliente:cliente,items:cart.map(function(i){return Object.assign({},i);}),note:note,time:Date.now(),status:'pending',checkedItems:[]};
+  var isEdit=!!editingOrder;
+  var useSessionId=isEdit?editingOrder.sessionId:sessionId;
+  var useOrderNum=isEdit?editingOrder.orderNum:orderNum;
+  var order={id:Date.now(),sessionId:useSessionId,orderNum:useOrderNum,table:selectedTable,coperti:coperti,cliente:cliente,items:cart.map(function(i){return Object.assign({},i);}),note:note,time:Date.now(),status:'pending',checkedItems:[],modificato:isEdit};
   orders.push(order);
+  editingOrder=null;
+  updateEditingBanner();
   if(window.RBPrint) RBPrint.printOrder(order);
   history.push(Object.assign({},order,{status:'in-corso'}));
   save();
-  showToast(orderNum>1?'➕ Aggiunta #'+orderNum+' — '+getSpotLabel(selectedTable):'✅ Ordine '+getSpotLabel(selectedTable)+' inviato in cucina!');
+  showToast(isEdit?'✏️ Ordine '+getSpotLabel(selectedTable)+' modificato e ristampato!':(orderNum>1?'➕ Aggiunta #'+orderNum+' — '+getSpotLabel(selectedTable):'✅ Ordine '+getSpotLabel(selectedTable)+' inviato in cucina!'));
   cart=[];document.getElementById('cart-note').value='';
   renderCart();renderTableGrid();renderMenuGrid();updateSendBtn();updateKitchenBadge();
 }
@@ -3014,7 +3034,7 @@ function renderKitchen() {
       var rm=item.removed&&item.removed.length?'<div class="kitchen-mod kitchen-mod-rm">✕ senza: '+item.removed.join(', ')+'</div>':'';
       var ex=item.extra&&item.extra.length?'<div class="kitchen-mod kitchen-mod-ex">+ extra: '+item.extra.join(', ')+'</div>':'';
       return '<div class="order-item-row'+(ck?' item-done':'')+'"><div class="order-item-qty">'+item.qty+'</div><div class="order-item-name-wrap"><div class="order-item-name">'+item.emoji+' '+item.name+'</div>'+rm+ex+'</div><div class="order-item-check'+(ck?' checked':'')+'" onclick="toggleItem('+o.id+',\''+item.id+'-'+item.name+'\')">'+(ck?'✓':'')+'</div></div>';
-    }).join('')+'</div>'+(o.note?'<div class="order-note">📝 '+o.note+'</div>':'')+'<div class="order-card-footer">'+(o.status==='pending'?'<button class="btn-ready" onclick="markDone('+o.id+')">✓ Pronto & Servito</button>':'<button class="btn-ready" style="background:var(--sea-light)" onclick="markPending('+o.id+')">↩ Riapri</button>')+'<button class="btn-cancel-order" onclick="cancelOrder('+o.id+')">✕</button></div></div>';
+    }).join('')+'</div>'+(o.note?'<div class="order-note">📝 '+o.note+'</div>':'')+'<div class="order-card-footer">'+(o.status==='pending'?'<button class="btn-ready" onclick="markDone('+o.id+')">✓ Pronto & Servito</button><button class="btn-edit-order" onclick="editOrder('+o.id+')">✏️ Modifica</button>':'<button class="btn-ready" style="background:var(--sea-light)" onclick="markPending('+o.id+')">↩ Riapri</button>')+'<button class="btn-cancel-order" onclick="cancelOrder('+o.id+')">✕</button></div></div>';
   }).join('');
 }
 
@@ -3038,6 +3058,45 @@ function cancelOrder(id) {
   orders=orders.filter(function(o){return o.id!==id;});
   var h=history.find(function(h){return h.id===id;});if(h) h.status='annullato';
   save();renderKitchen();renderTableGrid();updateKitchenBadge();
+}
+function editOrder(id) {
+  var o = orders.find(function(x){return x.id===id;});
+  if (!o) return;
+  // Blocco se il carrello ha già roba
+  if (cart && cart.length > 0) {
+    alert('Hai già un ordine in preparazione nel carrello.\n\nInvialo o svuotalo prima di modificare un ordine esistente.');
+    return;
+  }
+  if (!confirm('Modificare questo ordine?\n\nVerrà ricaricato nel carrello. Dopo le modifiche premi "Invia in Cucina" per aggiornarlo e ristampare lo scontrino.')) return;
+  // Ricarica l'ordine nel carrello
+  cart = o.items.map(function(i){ return Object.assign({}, i); });
+  selectedTable = o.table;
+  coperti = o.coperti || 0;
+  cliente = o.cliente || '';
+  var noteEl = document.getElementById('cart-note');
+  if (noteEl) noteEl.value = o.note || '';
+  // Memorizza lo stato di modifica (per ripristino e per mantenere sessionId/orderNum al reinvio)
+  editingOrder = { original: Object.assign({}, o), id: o.id, sessionId: o.sessionId, orderNum: o.orderNum };
+  // Rimuovi il vecchio ordine dagli attivi (verrà sostituito al reinvio)
+  orders = orders.filter(function(x){return x.id!==id;});
+  // Aggiorna UI: mostra il carrello sul tavolo, aggiorna cucina
+  var cp = document.getElementById('cart-panel');
+  if (cp) cp.classList.add('visible');
+  document.getElementById('cart-table-label').textContent = getSpotLabel(o.table);
+  document.getElementById('coperti-val').textContent = coperti;
+  var clienteInput = document.getElementById('cart-cliente');
+  if (clienteInput) clienteInput.value = cliente;
+  save();
+  renderCart(); renderKitchen(); renderTableGrid(); updateSendBtn();
+  // Passa alla vista Bar/Ordini dove c'è il carrello
+  var barTab = document.getElementById('tab-bar');
+  if (typeof showView === 'function') showView('bar', barTab);
+  // Avviso visivo che si sta modificando
+  updateEditingBanner();
+}
+function updateEditingBanner() {
+  var b = document.getElementById('editing-banner');
+  if (b) b.style.display = editingOrder ? 'block' : 'none';
 }
 function updateKitchenBadge() {
   var p=orders.filter(function(o){return o.status==='pending';}).length;

@@ -42,7 +42,13 @@
     push(INIT);push(CENTER);push(BIG);push(txt(label));push(nl());push(TALL);
     push(txt('Bagno Capri'));push(nl());push(LEFT);push(txt(LINE));push(nl());
     push(BIG);var head=(typeof window!=='undefined'&&typeof window.getSpotLabel==='function')?window.getSpotLabel(order.table):spotLabel(order.table);if(order.orderNum)head+='  #'+order.orderNum;
-    push(txt(head));push(nl());push(TALL);
+    push(txt(head));push(nl());
+    if(order.modificato){
+      push(CENTER);push(BIG);push(BOLD_ON);
+      push(txt('*** MODIFICATO ***'));push(nl());
+      push(BOLD_OFF);push(NORMAL);push(LEFT);
+    }
+    push(TALL);
     push(txt('Coperti: '+(order.coperti||'-')+'   '+hhmm(order.time)));push(nl());
     if(order.cliente&&String(order.cliente).trim()){push(TALL);push(BOLD_ON);push(txt('Cliente: '+order.cliente));push(nl());push(BOLD_OFF);}
     push(txt(LINE));push(nl());

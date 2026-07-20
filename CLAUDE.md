@@ -348,6 +348,12 @@ Test stampa fisica sull'Android al banco (stesso test da fare già per scontrino
 - CAUSA: mergedTables (i tavoli uniti) viveva solo in RAM, mai salvato. Dopo refresh o su altro dispositivo il merge spariva, l'ordine restava orfano legato a un tavolo unito inesistente, impossibile aggiungere portate.
 - FIX: persistenza di mergedTables come già fatto per categories/spots: caricato da localStorage (mmt_merged), salvato in _writeLocal + fbSave (chiave firebase "merged"), letto dal listener (data.merged), save() chiamato in confirmMerge() e splitTable(). [566f523]
 
+### Completamento merge: bottone Separa tavoli (dal 2026-07-20)
+- La funzione splitTable() esisteva già ma non era MAI richiamata dall'interfaccia (codice orfano): impossibile separare i tavoli uniti se non da console.
+- FIX: aggiunto bottone "🔓 Separa tavoli" nella toolbar, accanto a "🔗 Unisci tavoli". Appare solo quando selectedTable è un tavolo unito (mergedTables[id]). Nascosto altrimenti e alla chiusura carrello.
+- Funzione ponte splitSelectedTable(): verifica che sia un tavolo unito, BLOCCA se ci sono ordini pending (come per l'eliminazione tavoli: prima libera, poi separa — evita ordini orfani con table="A+B" inesistente), poi chiama splitTable().
+- Ora la funzione "unisci tavoli" è completa in entrambe le direzioni (unisci + separa), entrambe persistenti e sincronizzate. [e17d2c0]
+
 ### Modifica ordine già inviato in cucina (feature nuova)
 - Bottone "✏️ Modifica" nelle card cucina (solo ordini pending).
 - Flusso: ricarica l'ordine nel carrello (items/note/coperti/cliente), rimuove il vecchio dagli attivi, il cameriere modifica liberamente, "Invia in Cucina" crea l'ordine corretto MANTENENDO sessionId e orderNum originali (è una correzione, non nuova portata), con flag modificato:true, ristampa scontrino con "*** MODIFICATO ***" in BIG.

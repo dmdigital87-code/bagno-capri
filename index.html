@@ -1534,6 +1534,9 @@
         <button id="btn-start-merge" onclick="startMerge()" style="background:#c9954a;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">
           🔗 Unisci tavoli
         </button>
+        <button id="separa-tavoli-btn" onclick="splitSelectedTable()" style="display:none;background:#c9954a;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">
+          🔓 Separa tavoli
+        </button>
       </div>
       <div class="merge-bar" id="merge-bar">
         <span>Seleziona i tavoli da unire:</span>
@@ -2808,6 +2811,10 @@ function selectTable(id) {
       liberaBtn.onclick=function(){liberaTavolo(sid);};
     } else liberaBtn.style.display='none';
   }
+  var separaBtn = document.getElementById('separa-tavoli-btn');
+  if (separaBtn) {
+    separaBtn.style.display = mergedTables[id] ? 'inline-flex' : 'none';
+  }
 }
 
 function closeCart() {
@@ -2823,6 +2830,7 @@ function closeCart() {
   document.getElementById('cart-table-label').textContent='—';
   document.getElementById('coperti-val').textContent='0';
   var ci=document.getElementById('cart-cliente');if(ci) ci.value='';
+  var sepBtn=document.getElementById('separa-tavoli-btn');if(sepBtn) sepBtn.style.display='none';
   renderTableGrid();renderCart();updateSendBtn();
 }
 
@@ -2854,6 +2862,23 @@ function splitTable(mid) {
   save();
   if(selectedTable===mid){selectedTable=null;cart=[];coperti=0;}
   renderTableGrid();renderCart();
+  var sepBtn=document.getElementById('separa-tavoli-btn');
+  if(sepBtn) sepBtn.style.display='none';
+}
+function splitSelectedTable() {
+  if (!selectedTable || !mergedTables[selectedTable]) {
+    alert('Seleziona prima un tavolo unito da separare.');
+    return;
+  }
+  // Blocca se ci sono ordini attivi (pending) sul tavolo unito
+  var activeOrders = orders.filter(function(o){
+    return o.table === selectedTable && o.status === 'pending';
+  });
+  if (activeOrders.length > 0) {
+    alert('Impossibile separare "'+selectedTable+'": ha '+activeOrders.length+' ordine/i attivo/i.\n\nLibera prima il tavolo (Paga & Libera) e poi separa.');
+    return;
+  }
+  splitTable(selectedTable);
 }
 
 // Menu

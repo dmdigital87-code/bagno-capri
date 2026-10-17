@@ -365,7 +365,7 @@ Test stampa fisica sull'Android al banco (stesso test da fare già per scontrino
 ### TASK APERTI aggiornati
 - history[] non ripulita dopo una modifica ordine: resta un record vecchio "in-corso" oltre al nuovo. Preesistente, non è rischio operativo, sistemare con calma.
 - Ridondanza prefisso getSpotLabel: CHIUSA con questa sessione.
-- Regole sicurezza Firebase: ancora aperta (non urgente).
+- Regole sicurezza Firebase: CHIUSA il 2026-10-17 (vedi sezione «Sicurezza Firebase» in fondo).
 
 ### RIFLESSIONE ARCHITETTURALE (importante per prodotto futuro)
 Pattern ricorrente emerso in stagione: l'app è nata come prototipo "tutto in RAM, un dispositivo". La stagione reale (iPad camerieri + Android banco) ha fatto emergere in sequenza i pezzi di stato NON persistiti: categorie, spots, merge, e la gestione ordini. Per il prodotto vendibile futuro, l'architettura deve partire da "stato condiviso persistito e sincronizzato di DEFAULT", non rincorrere ogni stato dopo che un cliente ci sbatte contro. Da approfondire in una sessione di design fuori stagione.
@@ -374,3 +374,23 @@ Pattern ricorrente emerso in stagione: l'app è nata come prototipo "tutto in RA
 - Stampa scontrino: nomi tavolo corretti, "MODIFICATO" visibile, testo grande leggibile.
 - Merge multi-dispositivo: tavolo unito riapribile da altro dispositivo.
 - Modifica ordine: flusso completo + annulla senza perdere l'ordine.
+
+## Sicurezza Firebase: accesso del personale (dal 2026-10-17)
+
+### Problema
+Firebase segnalava il Realtime Database `bagno-capri-default-rtdb` con lettura e scrittura pubbliche: chiunque conoscesse l'indirizzo (visibile nel codice del sito) poteva leggere, modificare o cancellare menù, ordini e tavoli. Il PIN dell'app è controllato solo nella pagina e NON protegge il database.
+
+### Soluzione (PR #1, commit `daa2bd7`, merge `e0b629f`)
+- **Firebase Authentication, Email/password**: un solo account del personale, creato nella console (UID `B8LYYtu5eDQgRUXKnUjx35Tmmx63`). La password NON sta nel codice né in questo file.
+- **Schermata «Collega questo dispositivo»** (`#fb-auth-screen`, sopra il PIN, z-index 1100): compare solo se il dispositivo non ha fatto l'accesso. L'accesso resta salvato nel browser (`browserLocalPersistence`), quindi va fatto una sola volta per dispositivo. Il PIN resta com'era.
+- **Modulo Firebase in `<head>`**: importa anche `firebase-auth.js` 10.8.0. `window._fbReady` è `false` finché `onAuthStateChanged` non riceve l'utente.
+  - `fbListen(callback)`: se l'accesso non c'è ancora, la callback resta in attesa (`pendingListen`) e parte appena l'utente si collega.
+  - `fbSave` e `saveSettings` scrivono solo se `_fbReady` è vero.
+  - `window.fbSignIn()`: accesso con email e password; in caso di errore mostra «Accesso non riuscito» e scrive in console solo il codice d'errore.
+- **`database.rules.json`** (nel repository, pubblicato a mano nella console il 2026-10-17): tutto chiuso tranne `bagno_capri`, leggibile e scrivibile solo da quell'UID. Verificato dall'esterno: lettura e scrittura senza account → `Permission denied`.
+
+### Da ricordare
+- Ogni dispositivo nuovo (o con i dati del browser cancellati) deve rifare «Collega» con l'account del personale.
+- Se si cambia account o se ne aggiunge un secondo, aggiornare l'UID in `database.rules.json` e ripubblicare le regole nella console (Realtime Database → Regole).
+- Le regole nella console NON si aggiornano da sole quando cambia il file: vanno ripubblicate a mano.
+- I campi del modulo usano i colori del tema (`--sand`, `--text`, pulsante `--accent`): leggibili sia col tema chiaro sia con quello scuro.

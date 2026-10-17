@@ -1,0 +1,10 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "bagno_capri": {
+      ".read": "auth != null && auth.uid === 'B8LYYtu5eDQgRUXKnUjx35Tmmx63'",
+      ".write": "auth != null && auth.uid === 'B8LYYtu5eDQgRUXKnUjx35Tmmx63'"
+    }
+  }
+}

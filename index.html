@@ -1378,6 +1378,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBPCa7ha3dCS62aOS87v8deiQQJ7f5w82g",
@@ -1393,7 +1394,49 @@
   const db = getDatabase(app);
 
   window._fb = { db, ref, set, onValue, off };
-  window._fbReady = true;
+  // Il database accetta solo l'account del personale: finché il dispositivo
+  // non ha fatto l'accesso non si legge e non si scrive nulla.
+  window._fbReady = false;
+  const auth = getAuth(app);
+  let pendingListen = null;
+
+  function showAuthScreen(show) {
+    const el = document.getElementById('fb-auth-screen');
+    if (el) el.classList.toggle('hidden', !show);
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    window._fbReady = !!user;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => showAuthScreen(!user), { once: true });
+    } else {
+      showAuthScreen(!user);
+    }
+    if (user && pendingListen) {
+      const callback = pendingListen;
+      pendingListen = null;
+      window.fbListen(callback);
+    }
+  });
+
+  window.fbSignIn = async function() {
+    const email = document.getElementById('fb-auth-email').value.trim();
+    const password = document.getElementById('fb-auth-password').value;
+    const error = document.getElementById('fb-auth-error');
+    const button = document.getElementById('fb-auth-button');
+    error.textContent = '';
+    button.disabled = true;
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      await signInWithEmailAndPassword(auth, email, password);
+      document.getElementById('fb-auth-password').value = '';
+    } catch (e) {
+      console.warn('FB auth error:', e.code);
+      error.textContent = 'Accesso non riuscito: controlla email e password.';
+    } finally {
+      button.disabled = false;
+    }
+  };
 
   window.fbSave = function(data) {
     if (!window._fbReady) return;
@@ -1405,7 +1448,7 @@
   };
 
   window.fbListen = function(callback) {
-    if (!window._fbReady) return;
+    if (!window._fbReady) { pendingListen = callback; return; }
     const { db, ref, onValue } = window._fb;
     onValue(ref(db, 'bagno_capri'), (snapshot) => {
       const data = snapshot.val();
@@ -1440,6 +1483,21 @@
 </script>
 </head>
 <body>
+
+<!-- ACCESSO FIREBASE: una volta per dispositivo -->
+<div class="login-screen hidden" id="fb-auth-screen" style="z-index:1100">
+  <form class="login-box" onsubmit="event.preventDefault(); window.fbSignIn && window.fbSignIn();">
+    <div class="login-logo">Bagno <span>Capri</span></div>
+    <div class="login-subtitle">Collega questo dispositivo con l'account del personale. Serve una sola volta.</div>
+    <input id="fb-auth-email" type="email" autocomplete="username" placeholder="Email" required
+           style="width:100%;padding:12px;margin-bottom:10px;border:1px solid var(--sand-dark);border-radius:10px;font-size:1rem;background:var(--sand);color:var(--text);box-sizing:border-box">
+    <input id="fb-auth-password" type="password" autocomplete="current-password" placeholder="Password" required
+           style="width:100%;padding:12px;margin-bottom:14px;border:1px solid var(--sand-dark);border-radius:10px;font-size:1rem;background:var(--sand);color:var(--text);box-sizing:border-box">
+    <button id="fb-auth-button" type="submit"
+            style="width:100%;padding:12px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:1rem;font-weight:600;cursor:pointer">Collega</button>
+    <div class="pin-error" id="fb-auth-error"></div>
+  </form>
+</div>
 
 <!-- LOGIN -->
 <div class="login-screen" id="login-screen">
@@ -2122,7 +2180,7 @@ function getSettings() {
 }
 function saveSettings(s) {
   localStorage.setItem('bc_settings', JSON.stringify(s));
-  if (typeof window.fbSave === 'function') {
+  if (typeof window.fbSave === 'function' && window._fbReady) {
     window._fbWriting = true;
     var ref = window._fb && window._fb.ref ? window._fb.ref(window._fb.db, 'bagno_capri/settings') : null;
     if (ref && window._fb.set) { window._fb.set(ref, s); }
